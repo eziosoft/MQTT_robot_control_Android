@@ -105,6 +105,7 @@ class MainActivity : AppCompatActivity() {
         mjpegView = findViewById(R.id.mjpegview)
         watchSwich = findViewById(R.id.Watch)
         precisionSwich = findViewById(R.id.precisionSwich)
+        precisionSwich.isChecked = true
         gimbalSwich = findViewById(R.id.switchGimbal)
         joystickView = findViewById(R.id.joystickView2)
         joystickView.setBackgroundColor(Color.TRANSPARENT)
@@ -164,7 +165,8 @@ class MainActivity : AppCompatActivity() {
             if (BuildConfig.DEBUG)
                 Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
 
-            val bytes = byteArrayOf('$'.toByte(), 5, ch1.toByte(), ch2.toByte(), ch3.toByte(), ch4.toByte())
+            val bytes =
+                byteArrayOf('$'.toByte(), 5, ch1.toByte(), ch2.toByte(), ch3.toByte(), ch4.toByte())
             if ((ch1 == 100 && ch2 == 100) || (ch3 == 100 && ch4 == 100) || (System.currentTimeMillis() > t)) {
                 t = System.currentTimeMillis() + 100
                 if (!watchSwich.isChecked)
@@ -186,6 +188,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         connectToMQTT()
+        startMJPEGStream("http://77.140.59.128:82/videostream.cgi?user=ezio&pwd=tgyhtgyh")
     }
 
     override fun onPause() {
@@ -212,8 +215,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startMJPEGStream(url: String) {
-        Log.d("aaa", "startMJPEG")
-        Toast.makeText(this, "starting video : $url", Toast.LENGTH_SHORT).show()
+//        Log.d("aaa", "startMJPEG")
+//        Toast.makeText(this, "starting video : $url", Toast.LENGTH_SHORT).show()
         mjpegView.mode = MjpegView.MODE_FIT_WIDTH
         mjpegView.isRecycleBitmap = true
         mjpegView.setUrl(url)
