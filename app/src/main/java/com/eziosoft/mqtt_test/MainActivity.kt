@@ -23,37 +23,30 @@ package com.eziosoft.mqtt_test
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import com.longdo.mjpegviewer.MjpegView
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import java.lang.Exception
 
-
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val mqttHelper = MqttHelper()
-    private lateinit var mjpegView: MjpegView
-    private lateinit var TV: TextView
-    private lateinit var joystickView: JoystickView
-    private lateinit var watchSwich: Switch
-    private lateinit var precisionSwich: Switch
-    private lateinit var gimbalSwich: Switch
-    private lateinit var serverIP: EditText
-
-
     private var t: Long = 0
 
-    val robotName = "tank"
-    val MQTTcontrolTopic = "$robotName/in"
-    val MQTTtelemetryTopic = "$robotName/out"
-    val MQTTvideoTopic = "$robotName/video"
+    private val robotName = "tank"
+    private val MQTTcontrolTopic = "$robotName/in"
+    private val MQTTtelemetryTopic = "$robotName/out"
+    private val MQTTvideoTopic = "$robotName/video"
 
 
-    val mqttCallback = object : MqttCallbackExtended {
+    private val mqttCallback = object : MqttCallbackExtended {
         override fun connectComplete(reconnect: Boolean, serverURI: String?) {
             Log.d("aaa", "connectComplete")
             TV.text = "Connected"
@@ -98,16 +91,8 @@ class MainActivity : AppCompatActivity() {
 
         val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
 
-        serverIP = findViewById(R.id.serverIP)
         serverIP.setText(sharedPreferences.getString("serverIP", "test.mosquitto.org:1883"))
-
-        TV = findViewById(R.id.TV)
-        mjpegView = findViewById(R.id.mjpegview)
-        watchSwich = findViewById(R.id.Watch)
-        precisionSwich = findViewById(R.id.precisionSwich)
         precisionSwich.isChecked = true
-        gimbalSwich = findViewById(R.id.switchGimbal)
-        joystickView = findViewById(R.id.joystickView2)
         joystickView.setBackgroundColor(Color.TRANSPARENT)
         joystickView.setBorderWidth(5)
         joystickView.setBorderColor(Color.BLUE)
@@ -118,15 +103,14 @@ class MainActivity : AppCompatActivity() {
         joystickView.isSquareBehaviour = true
 
 
-        val swichVideo = findViewById<Switch>(R.id.switchVideo)
-        swichVideo.setOnCheckedChangeListener { buttonView, isChecked ->
+        switchVideo.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 mqttHelper.subscribe(MQTTvideoTopic)
-                swichVideo.visibility = View.GONE
+                switchVideo.visibility = View.GONE
             }
         }
 
-        watchSwich.setOnCheckedChangeListener { buttonView, isChecked ->
+        watchSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
                 mqttHelper.subscribe(MQTTcontrolTopic)
             } else {
@@ -143,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             val ch3: Int
             val ch4: Int
 
-            if (!gimbalSwich.isChecked) {
+            if (!switchGimbal.isChecked) {
                 if (precisionSwich.isChecked) {
                     x /= 4f
                     y /= 4f
@@ -169,7 +153,7 @@ class MainActivity : AppCompatActivity() {
                 byteArrayOf('$'.toByte(), 5, ch1.toByte(), ch2.toByte(), ch3.toByte(), ch4.toByte())
             if ((ch1 == 100 && ch2 == 100) || (ch3 == 100 && ch4 == 100) || (System.currentTimeMillis() > t)) {
                 t = System.currentTimeMillis() + 100
-                if (!watchSwich.isChecked)
+                if (!watchSwitch.isChecked)
                     if (mqttHelper.isConnected()) mqttHelper.publish(MQTTcontrolTopic, bytes)
             }
         }
@@ -217,15 +201,15 @@ class MainActivity : AppCompatActivity() {
     fun startMJPEGStream(url: String) {
 //        Log.d("aaa", "startMJPEG")
 //        Toast.makeText(this, "starting video : $url", Toast.LENGTH_SHORT).show()
-        mjpegView.mode = MjpegView.MODE_FIT_WIDTH
-        mjpegView.isRecycleBitmap = true
-        mjpegView.setUrl(url)
-        mjpegView.startStream()
+        mjpegview.mode = MjpegView.MODE_FIT_WIDTH
+        mjpegview.isRecycleBitmap = true
+        mjpegview.setUrl(url)
+        mjpegview.startStream()
     }
 
     fun stopMJPEGStream() {
         try {
-            mjpegView.stopStream()
+            mjpegview.stopStream()
         } catch (e: Exception) {
         }
     }

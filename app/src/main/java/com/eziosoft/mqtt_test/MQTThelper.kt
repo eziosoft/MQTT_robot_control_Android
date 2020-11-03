@@ -25,9 +25,6 @@ import android.util.Log
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.*
 
-
-
-
 class MqttHelper {
     var mqttClient: MqttAndroidClient? = null
 
@@ -67,8 +64,8 @@ class MqttHelper {
     }
 
     fun isConnected(): Boolean {
-        if (mqttClient == null) return false
-        else return mqttClient!!.isConnected
+        return if (mqttClient == null) false
+        else mqttClient!!.isConnected
     }
 }
 
