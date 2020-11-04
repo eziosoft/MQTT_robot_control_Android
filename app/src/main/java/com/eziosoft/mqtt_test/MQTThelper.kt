@@ -20,52 +20,82 @@
 
 package com.eziosoft.mqtt_test
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityComponent
+import dagger.hilt.android.components.ApplicationComponent
+import dagger.hilt.android.scopes.ActivityScoped
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class MqttHelper {
-    var mqttClient: MqttAndroidClient? = null
 
-    fun connect(context: Context, brokerURL: String, clientID: String, callbackExtended: MqttCallbackExtended) {
-        Log.d("aaa", "connect")
-        mqttClient = MqttAndroidClient(context, brokerURL, clientID)
-        //Set call back class
-        mqttClient?.setCallback(callbackExtended)
-        val connOpts = MqttConnectOptions()
-        val token = mqttClient?.connect(connOpts)
+@Module
+@InstallIn(ActivityComponent::class)
+object MqttAndoridConnectOptionsModule {
+
+    @Provides
+    fun provideMqttAndroidConnectOptions(): MqttConnectOptions {
+        return MqttConnectOptions()
+    }
+}
+
+@ActivityScoped
+class MqttHelper @Inject constructor() {
+    private val TAG = "aaa"
+
+    lateinit var mqttClient: MqttAndroidClient
+
+    @Inject
+    lateinit var connectionOptions: MqttConnectOptions
+
+    fun connect(
+        context: Context,
+        brokerURL: String,
+        clientID: String,
+        callbackExtended: MqttCallbackExtended
+    ) {
+        Log.d(TAG, "connect")
+        mqttClient = MqttAndroidClient(context, brokerURL, clientID).apply {
+            setCallback(callbackExtended)
+            connect(connectionOptions)
+        }
     }
 
     fun subscribe(topic: String) {
-        mqttClient?.subscribe(topic, 0, null, object : IMqttActionListener {
+        mqttClient.subscribe(topic, 0, null, object : IMqttActionListener {
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                Log.d("aaa", "subscribe to $topic FAILED")
+                Log.d(TAG, "subscribe to $topic FAILED")
             }
 
             override fun onSuccess(asyncActionToken: IMqttToken?) {
-                Log.d("aaa", "subscribe to $topic SUCCESS")
+                Log.d(TAG, "subscribe to $topic SUCCESS")
             }
         })
     }
 
     fun close() {
-        mqttClient?.disconnect()
+        mqttClient.disconnect()
     }
 
     fun publish(topic: String, message: String) {
-        Log.d("aaa", "publish: $message")
-        mqttClient?.publish(topic, message.toByteArray(), 0, false)
+        Log.d(TAG, "publish: $message")
+        mqttClient.publish(topic, message.toByteArray(), 0, false)
     }
 
     fun publish(topic: String, message: ByteArray) {
-        Log.d("aaa", "publish: $message")
-        mqttClient?.publish(topic, message, 0, false)
+        Log.d(TAG, "publish: $message")
+        mqttClient.publish(topic, message, 0, false)
     }
 
     fun isConnected(): Boolean {
-        return if (mqttClient == null) false
-        else mqttClient!!.isConnected
+        return if (!this::mqttClient.isInitialized) false
+        else mqttClient.isConnected
     }
 }
 

@@ -25,7 +25,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.longdo.mjpegviewer.MjpegView
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,18 +32,68 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttMessage
-import java.lang.Exception
+import javax.inject.Inject
+import kotlin.math.cos
+import kotlin.math.sin
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val mqttHelper = MqttHelper()
-    private var t: Long = 0
+    @Inject
+    lateinit var mqttHelper: MqttHelper
 
+    private var t: Long = 0
     private val robotName = "tank"
     private val MQTTcontrolTopic = "$robotName/in"
     private val MQTTtelemetryTopic = "$robotName/out"
     private val MQTTvideoTopic = "$robotName/video"
 
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        serverIP.setText(sharedPreferences.getString("serverIP", "test.mosquitto.org:1883"))
+
+        precisionSwich.isChecked = true
+
+        joystickView.apply {
+            setBackgroundColor(Color.TRANSPARENT)
+            setBorderWidth(5)
+            setBorderColor(Color.BLUE)
+            setButtonColor(Color.BLUE)
+            setFixedCenter(true)
+            isAutoReCenterButton = true
+            axisToCenter = JoystickView.AxisToCenter.BOTH
+            isSquareBehaviour = true
+
+            setOnMoveListener { angle, strength ->
+                handleJoystick(angle, strength)
+            }
+        }
+
+        switchVideo.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                mqttHelper.subscribe(MQTTvideoTopic)
+                switchVideo.visibility = View.GONE
+            }
+        }
+
+        watchSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                mqttHelper.subscribe(MQTTcontrolTopic)
+            } else {
+                mqttHelper.mqttClient.unsubscribe(MQTTcontrolTopic)
+            }
+        }
+
+        connectButton.setOnClickListener()
+        {
+            sharedPreferences.edit().putString("serverIP", serverIP.text.toString()).apply()
+            connectToMQTT()
+        }
+
+    }
 
     private val mqttCallback = object : MqttCallbackExtended {
         override fun connectComplete(reconnect: Boolean, serverURI: String?) {
@@ -58,7 +107,6 @@ class MainActivity : AppCompatActivity() {
             TV.text = message.toString()
 
             if (topic == MQTTvideoTopic) {
-//                stopMJPEGStream()
                 val decryptedURL = decryptStringWithXORFromHex(message.toString(), "tank")
                 Log.d("aaa", decryptedURL)
                 TV.text = decryptedURL
@@ -85,89 +133,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
-
-        serverIP.setText(sharedPreferences.getString("serverIP", "test.mosquitto.org:1883"))
-        precisionSwich.isChecked = true
-        joystickView.setBackgroundColor(Color.TRANSPARENT)
-        joystickView.setBorderWidth(5)
-        joystickView.setBorderColor(Color.BLUE)
-        joystickView.setButtonColor(Color.BLUE)
-        joystickView.setFixedCenter(true)
-        joystickView.isAutoReCenterButton = true
-        joystickView.axisToCenter = JoystickView.AxisToCenter.BOTH
-        joystickView.isSquareBehaviour = true
-
-
-        switchVideo.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                mqttHelper.subscribe(MQTTvideoTopic)
-                switchVideo.visibility = View.GONE
-            }
-        }
-
-        watchSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
-                mqttHelper.subscribe(MQTTcontrolTopic)
-            } else {
-                mqttHelper.mqttClient?.unsubscribe(MQTTcontrolTopic)
-            }
-        }
-
-        joystickView.setOnMoveListener { angle, strength ->
-            var x = Math.cos(Math.toRadians(angle.toDouble())) * strength / 100f
-            var y = Math.sin(Math.toRadians(angle.toDouble())) * strength / 100f
-
-            val ch1: Int
-            val ch2: Int
-            val ch3: Int
-            val ch4: Int
-
-            if (!switchGimbal.isChecked) {
-                if (precisionSwich.isChecked) {
-                    x /= 4f
-                    y /= 4f
-                }
-
-                ch1 = (-x * 100 + 100).toInt()
-                ch2 = (y * 100 + 100).toInt()
-                ch3 = 100 //middle position
-                ch4 = 100 //middle position
-
-
-            } else {
-                ch1 = 100 //middle position
-                ch2 = 100 //middle position
-                ch3 = (-x * 100 + 100).toInt()
-                ch4 = (y * 100 + 100).toInt()
-            }
-
-            if (BuildConfig.DEBUG)
-                Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
-
-            val bytes =
-                byteArrayOf('$'.toByte(), 5, ch1.toByte(), ch2.toByte(), ch3.toByte(), ch4.toByte())
-            if ((ch1 == 100 && ch2 == 100) || (ch3 == 100 && ch4 == 100) || (System.currentTimeMillis() > t)) {
-                t = System.currentTimeMillis() + 100
-                if (!watchSwitch.isChecked)
-                    if (mqttHelper.isConnected()) mqttHelper.publish(MQTTcontrolTopic, bytes)
-            }
-        }
-
-
-        val connectButton = findViewById<Button>(R.id.connectButton)
-        connectButton.setOnClickListener()
-        {
-            sharedPreferences.edit().putString("serverIP", serverIP.text.toString()).apply()
-            connectToMQTT()
-        }
-
-    }
-
 
     override fun onResume() {
         super.onResume()
@@ -188,29 +153,72 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun connectToMQTT() {
+    private fun connectToMQTT() {
         val url = "tcp://" + serverIP.text
         if (mqttHelper.isConnected()) mqttHelper.close()
         mqttHelper.connect(this, url, "user${System.currentTimeMillis()}", mqttCallback)
     }
 
-    fun closeMQTT() {
+    private fun closeMQTT() {
         mqttHelper.close()
     }
 
-    fun startMJPEGStream(url: String) {
+    private fun startMJPEGStream(url: String) {
 //        Log.d("aaa", "startMJPEG")
 //        Toast.makeText(this, "starting video : $url", Toast.LENGTH_SHORT).show()
-        mjpegview.mode = MjpegView.MODE_FIT_WIDTH
-        mjpegview.isRecycleBitmap = true
-        mjpegview.setUrl(url)
-        mjpegview.startStream()
+        mjpegview.apply {
+            mode = MjpegView.MODE_FIT_WIDTH
+            isRecycleBitmap = true
+            setUrl(url)
+            startStream()
+        }
     }
 
-    fun stopMJPEGStream() {
+    private fun stopMJPEGStream() {
         try {
             mjpegview.stopStream()
         } catch (e: Exception) {
+        }
+    }
+
+
+    private fun handleJoystick(angle: Int, strength: Int) {
+        var x = cos(Math.toRadians(angle.toDouble())) * strength / 100f
+        var y = sin(Math.toRadians(angle.toDouble())) * strength / 100f
+
+        val ch1: Int
+        val ch2: Int
+        val ch3: Int
+        val ch4: Int
+
+        if (!switchGimbal.isChecked) {
+            if (precisionSwich.isChecked) {
+                x /= 4f
+                y /= 4f
+            }
+
+            ch1 = (-x * 100 + 100).toInt()
+            ch2 = (y * 100 + 100).toInt()
+            ch3 = 100 //middle position
+            ch4 = 100 //middle position
+
+
+        } else {
+            ch1 = 100 //middle position
+            ch2 = 100 //middle position
+            ch3 = (-x * 100 + 100).toInt()
+            ch4 = (y * 100 + 100).toInt()
+        }
+
+        if (BuildConfig.DEBUG)
+            Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
+
+        val bytes =
+            byteArrayOf('$'.toByte(), 5, ch1.toByte(), ch2.toByte(), ch3.toByte(), ch4.toByte())
+        if ((ch1 == 100 && ch2 == 100) || (ch3 == 100 && ch4 == 100) || (System.currentTimeMillis() > t)) {
+            t = System.currentTimeMillis() + 100
+            if (!watchSwitch.isChecked)
+                if (mqttHelper.isConnected()) mqttHelper.publish(MQTTcontrolTopic, bytes)
         }
     }
 }
