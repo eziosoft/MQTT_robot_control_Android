@@ -20,7 +20,6 @@
 
 package com.eziosoft.mqtt_test
 
-import android.app.Activity
 import android.content.Context
 import android.util.Log
 import dagger.Module
@@ -28,31 +27,22 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.components.ApplicationComponent
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityScoped
 import org.eclipse.paho.android.service.MqttAndroidClient
-import org.eclipse.paho.client.mqttv3.*
+import org.eclipse.paho.client.mqttv3.IMqttActionListener
+import org.eclipse.paho.client.mqttv3.IMqttToken
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import javax.inject.Inject
 import javax.inject.Singleton
 
 
-@Module
-@InstallIn(ActivityComponent::class)
-object MqttAndoridConnectOptionsModule {
-
-    @Provides
-    fun provideMqttAndroidConnectOptions(): MqttConnectOptions {
-        return MqttConnectOptions()
-    }
-}
-
-@ActivityScoped
+@Singleton
 class MqttHelper @Inject constructor() {
     private val TAG = "aaa"
 
     lateinit var mqttClient: MqttAndroidClient
-
-    @Inject
-    lateinit var connectionOptions: MqttConnectOptions
 
     fun connect(
         context: Context,
@@ -63,7 +53,7 @@ class MqttHelper @Inject constructor() {
         Log.d(TAG, "connect")
         mqttClient = MqttAndroidClient(context, brokerURL, clientID).apply {
             setCallback(callbackExtended)
-            connect(connectionOptions)
+            connect(MqttConnectOptions())
         }
     }
 

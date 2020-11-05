@@ -27,14 +27,10 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-
- fun decryptStringWithXORFromHex(input: String, key: String): String {
-
-    var key=key
+fun decryptStringWithXORFromHex(input: String, key: String): String {
+    var k = key
     val c = StringBuilder()
-    while (key.length < input.length / 2) {
-        key += key
-    }
+    while (k.length < input.length / 2) k += key
 
     var i = 0
     while (i < input.length) {
