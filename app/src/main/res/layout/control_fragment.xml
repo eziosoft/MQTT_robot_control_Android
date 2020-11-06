@@ -67,16 +67,6 @@
             app:layout_constraintBottom_toTopOf="@+id/watchSwitch"
             app:layout_constraintEnd_toEndOf="parent" />
 
-    <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switchGimbal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:text="gimbal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/mjpegview" />
-
     <EditText
             android:id="@+id/serverIP"
             android:layout_width="wrap_content"
@@ -112,5 +102,57 @@
             android:text="video"
             app:layout_constraintStart_toStartOf="@+id/mjpegview"
             app:layout_constraintTop_toTopOf="@+id/mjpegview" />
+
+    <TableLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/joystickView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/switchVideo">
+
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+            <Button
+                    android:id="@+id/buttonStart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start" />
+
+            <Button
+                    android:id="@+id/buttonStop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Stop" />
+        </TableRow>
+
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            <Button
+                    android:id="@+id/buttonStartBrush"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="StartBrush" />
+
+            <Button
+                    android:id="@+id/buttonStopBrush"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="StopBrush" />
+
+        </TableRow>
+
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+    </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

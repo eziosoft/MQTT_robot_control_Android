@@ -27,7 +27,6 @@ import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.longdo.mjpegviewer.MjpegView
 import dagger.hilt.android.AndroidEntryPoint
@@ -39,7 +38,7 @@ import kotlin.math.sin
 @AndroidEntryPoint
 class ControlFragment : Fragment(R.layout.control_fragment) {
 
-    val mainViewModel: MainViewModel by activityViewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
 
     @Inject
     lateinit var mqttHelper: MqttHelper
@@ -112,6 +111,21 @@ class ControlFragment : Fragment(R.layout.control_fragment) {
         mainViewModel.joyY.observe(viewLifecycleOwner, joyObserver)
 
 
+        buttonStart.setOnClickListener() {
+            sendChannels(0, 0, 2, 0)
+        }
+
+        buttonStop.setOnClickListener() {
+            sendChannels(0, 0, 1, 0)
+        }
+
+        buttonStopBrush.setOnClickListener() {
+            sendChannels(0, 0, 11, 0)
+        }
+
+        buttonStartBrush.setOnClickListener() {
+            sendChannels(0, 0, 10, 0)
+        }
     }
 
 
@@ -143,24 +157,10 @@ class ControlFragment : Fragment(R.layout.control_fragment) {
         val ch3: Int
         val ch4: Int
 
-        if (!switchGimbal.isChecked) {
-            if (precisionSwich.isChecked) {
-                x /= 4f
-                y /= 4f
-            }
-
-            ch1 = (-x * 100 + 100).toInt()
-            ch2 = (y * 100 + 100).toInt()
-            ch3 = 100 //middle position
-            ch4 = 100 //middle position
-
-
-        } else {
-            ch1 = 100 //middle position
-            ch2 = 100 //middle position
-            ch3 = (-x * 100 + 100).toInt()
-            ch4 = (y * 100 + 100).toInt()
-        }
+        ch1 = 100 //middle position
+        ch2 = 100 //middle position
+        ch3 = (-x * 100 + 100).toInt()
+        ch4 = (y * 100 + 100).toInt()
 
         if (BuildConfig.DEBUG)
             Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
@@ -175,5 +175,22 @@ class ControlFragment : Fragment(R.layout.control_fragment) {
                     bytes
                 )
         }
+    }
+
+    fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
+        val bytes =
+            byteArrayOf(
+                '$'.toByte(),
+                5,
+                (ch1 + 100).toByte(),
+                (ch2 + 100).toByte(),
+                (ch3 + 100).toByte(),
+                (ch4 + 100).toByte()
+            )
+        if (mqttHelper.isConnected()) mqttHelper.publish(
+            mainViewModel.MQTTcontrolTopic,
+            bytes
+        )
+
     }
 }
