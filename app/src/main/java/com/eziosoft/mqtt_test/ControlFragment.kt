@@ -126,6 +126,10 @@ class ControlFragment : Fragment(R.layout.control_fragment) {
         buttonStartBrush.setOnClickListener{
             sendChannels(0, 0, 10, 0)
         }
+
+        buttonClean.setOnClickListener{
+            sendChannels(0, 0, 12, 0)
+        }
     }
 
 
