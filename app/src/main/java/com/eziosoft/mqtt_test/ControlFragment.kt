@@ -111,19 +111,19 @@ class ControlFragment : Fragment(R.layout.control_fragment) {
         mainViewModel.joyY.observe(viewLifecycleOwner, joyObserver)
 
 
-        buttonStart.setOnClickListener() {
+        buttonStart.setOnClickListener {
             sendChannels(0, 0, 2, 0)
         }
 
-        buttonStop.setOnClickListener() {
+        buttonStop.setOnClickListener {
             sendChannels(0, 0, 1, 0)
         }
 
-        buttonStopBrush.setOnClickListener() {
+        buttonStopBrush.setOnClickListener {
             sendChannels(0, 0, 11, 0)
         }
 
-        buttonStartBrush.setOnClickListener() {
+        buttonStartBrush.setOnClickListener{
             sendChannels(0, 0, 10, 0)
         }
     }
