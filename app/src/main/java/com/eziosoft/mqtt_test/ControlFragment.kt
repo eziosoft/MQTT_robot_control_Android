@@ -157,10 +157,15 @@ class ControlFragment : Fragment(R.layout.control_fragment) {
         val ch3: Int
         val ch4: Int
 
-        ch1 = 100 //middle position
-        ch2 = 100 //middle position
-        ch3 = (-x * 100 + 100).toInt()
-        ch4 = (y * 100 + 100).toInt()
+        if (precisionSwich.isChecked) {
+            x /= 4f
+            y /= 4f
+        }
+
+        ch1 = (-x * 100 + 100).toInt()
+        ch2 = (y * 100 + 100).toInt()
+        ch3 = 100 //middle position
+        ch4 = 100 //middle position
 
         if (BuildConfig.DEBUG)
             Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
