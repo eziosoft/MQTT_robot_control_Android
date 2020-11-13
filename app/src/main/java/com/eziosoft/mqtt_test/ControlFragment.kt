@@ -130,6 +130,19 @@ class ControlFragment : Fragment(R.layout.control_fragment) {
         buttonClean.setOnClickListener{
             sendChannels(0, 0, 12, 0)
         }
+
+        buttonDock.setOnClickListener{
+            sendChannels(0,0,3,0)
+        }
+
+        buttonUnDock.setOnClickListener{
+            sendChannels(0,0,4,0)
+        }
+
+        buttonGetSensors.setOnClickListener{
+            sendChannels(0,0,20,0)
+
+        }
     }
 
 
