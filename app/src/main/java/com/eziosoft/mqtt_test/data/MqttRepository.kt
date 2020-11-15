@@ -21,8 +21,9 @@
 package com.eziosoft.mqtt_test.data
 
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class MqttRepository @Inject constructor(private val mqtt: Mqtt)
-{
-    fun getMqtt() = mqtt
+@Singleton
+class MqttRepository @Inject constructor(val mqtt: Mqtt) {
+
 }

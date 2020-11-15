@@ -33,15 +33,20 @@ import androidx.lifecycle.Observer
 import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainActivity
 import com.eziosoft.mqtt_test.R
+import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import com.longdo.mjpegviewer.MjpegView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.control_fragment.*
+import javax.inject.Inject
 import kotlin.math.cos
 import kotlin.math.sin
 
 @AndroidEntryPoint
 class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListener {
+
+    @Inject
+    lateinit var mqttRepository: MqttRepository
 
     private val controlFragmentViewModel: ControlFragmentViewModel by activityViewModels()
 
@@ -70,16 +75,16 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         switchVideo.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                (activity as MainActivity).mqtt.subscribe(controlFragmentViewModel.MQTTvideoTopic)
+                mqttRepository.mqtt.subscribe(controlFragmentViewModel.MQTTvideoTopic)
                 switchVideo.visibility = View.GONE
             }
         }
 
         watchSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                (activity as MainActivity).mqtt.subscribe(controlFragmentViewModel.MQTTcontrolTopic)
+                mqttRepository.mqtt.subscribe(controlFragmentViewModel.MQTTcontrolTopic)
             } else {
-                (activity as MainActivity).mqtt.mqttClient.unsubscribe(controlFragmentViewModel.MQTTcontrolTopic)
+                mqttRepository.mqtt.mqttClient.unsubscribe(controlFragmentViewModel.MQTTcontrolTopic)
             }
         }
 
@@ -160,7 +165,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > controlFragmentViewModel.t)) {
             controlFragmentViewModel.t = System.currentTimeMillis() + 100
             if (!watchSwitch.isChecked)
-                if ((activity as MainActivity).mqtt.isConnected())
+                if (mqttRepository.mqtt.isConnected())
                     sendChannels(ch1, ch2, ch3, ch4)
         }
     }
@@ -175,7 +180,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                 (ch3 + 100).toByte(),
                 (ch4 + 100).toByte()
             )
-        if ((activity as MainActivity).mqtt.isConnected()) (activity as MainActivity).mqtt.publish(
+        if (mqttRepository.mqtt.isConnected()) mqttRepository.mqtt.publish(
             controlFragmentViewModel.MQTTcontrolTopic,
             bytes
         )
