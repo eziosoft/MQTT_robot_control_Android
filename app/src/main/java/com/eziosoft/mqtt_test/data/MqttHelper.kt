@@ -14,14 +14,15 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Copyright (c) 2019. Bartosz Szczygiel
+ * Copyright (c) 2020. Bartosz Szczygiel
  *
  */
 
-package com.eziosoft.mqtt_test
+package com.eziosoft.mqtt_test.data
 
 import android.content.Context
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttToken
@@ -30,15 +31,16 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
-class MqttHelper @Inject constructor() {
+class MqttHelper @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val mqttConnectOptions: MqttConnectOptions
+) {
     private val TAG = "aaa"
 
     lateinit var mqttClient: MqttAndroidClient
 
     fun connect(
-        context: Context,
         brokerURL: String,
         clientID: String,
         callbackExtended: MqttCallbackExtended
@@ -46,7 +48,7 @@ class MqttHelper @Inject constructor() {
         Log.d(TAG, "connect")
         mqttClient = MqttAndroidClient(context, brokerURL, clientID).apply {
             setCallback(callbackExtended)
-            connect(MqttConnectOptions())
+            connect(mqttConnectOptions)
         }
     }
 

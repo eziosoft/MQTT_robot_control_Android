@@ -18,9 +18,10 @@
  *
  */
 
-package com.eziosoft.mqtt_test
+package com.eziosoft.mqtt_test.ui
 
 import androidx.fragment.app.Fragment
+import com.eziosoft.mqtt_test.R
 
 class BlankFragment : Fragment(R.layout.fragment_blank) {
 

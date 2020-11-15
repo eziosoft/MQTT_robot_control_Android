@@ -21,7 +21,7 @@
             app:layout_constraintTop_toBottomOf="@+id/serverIP" />
 
 
-    <com.eziosoft.mqtt_test.JoystickView
+    <com.eziosoft.mqtt_test.ui.customViews.JoystickView
             android:id="@+id/joystickView"
             android:layout_width="0dp"
             android:layout_height="0dp"

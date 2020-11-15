@@ -26,6 +26,6 @@
         app:startDestination="@id/controlFragment">
     <fragment
             android:id="@+id/controlFragment"
-            android:name="com.eziosoft.mqtt_test.ControlFragment"
+            android:name="com.eziosoft.mqtt_test.ui.ControlFragment"
             android:label="ControlFragment" />
 </navigation>

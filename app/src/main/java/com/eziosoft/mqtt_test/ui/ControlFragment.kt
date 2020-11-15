@@ -18,7 +18,7 @@
  *
  */
 
-package com.eziosoft.mqtt_test
+package com.eziosoft.mqtt_test.ui
 
 import android.content.Context
 import android.graphics.Color
@@ -28,6 +28,9 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import com.eziosoft.mqtt_test.*
+import com.eziosoft.mqtt_test.data.MqttHelper
+import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import com.longdo.mjpegviewer.MjpegView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.control_fragment.*

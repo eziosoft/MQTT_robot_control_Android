@@ -18,7 +18,7 @@
  *
  */
 
-package com.eziosoft.mqtt_test
+package com.eziosoft.mqtt_test.helpers
 
 import android.text.Html
 import android.os.Build

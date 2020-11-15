@@ -14,7 +14,7 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Copyright (c) 2019. Bartosz Szczygiel
+ * Copyright (c) 2020. Bartosz Szczygiel
  *
  */
 
@@ -24,6 +24,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.eziosoft.mqtt_test.data.MqttHelper
+import com.eziosoft.mqtt_test.data.MqttRepository
 import dagger.hilt.android.AndroidEntryPoint
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
@@ -36,12 +38,14 @@ class MainActivity : AppCompatActivity() {
     val mainViewModel: MainViewModel by viewModels()
 
     @Inject
+    lateinit var mqttRepository: MqttRepository
     lateinit var mqttHelper: MqttHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
 
+        mqttHelper = mqttRepository.getMqtt()
 
     }
 
@@ -82,18 +86,11 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    override fun onResume() {
-        super.onResume()
-        mainViewModel.tvString.value = "test"
-    }
-
-
     fun connectToMQTT() {
         val url = "tcp://" + mainViewModel.serverAddress.value
         if (mqttHelper.isConnected()) mqttHelper.close()
         mainViewModel.tvString.value = "Connecting to ${mainViewModel.serverAddress.value}"
         mqttHelper.connect(
-            this,
             url,
             "user${System.currentTimeMillis()}",
             mqttCallback
