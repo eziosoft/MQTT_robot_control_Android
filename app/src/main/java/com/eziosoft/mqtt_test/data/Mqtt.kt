@@ -32,6 +32,10 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private val robotName = "tank"
+val MQTTcontrolTopic = "$robotName/in"
+val MQTTtelemetryTopic = "$robotName/out"
+
 @Singleton
 class Mqtt @Inject constructor(
     private val mqttConnectOptions: MqttConnectOptions

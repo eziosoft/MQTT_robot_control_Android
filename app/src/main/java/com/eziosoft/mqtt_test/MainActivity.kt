@@ -20,14 +20,18 @@
 
 package com.eziosoft.mqtt_test
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.eziosoft.mqtt_test.data.MQTTcontrolTopic
+import com.eziosoft.mqtt_test.data.MQTTtelemetryTopic
 import com.eziosoft.mqtt_test.data.Mqtt
 import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.ui.ControlFragmentViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.control_fragment.*
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttMessage
@@ -46,20 +50,30 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
         mqtt = mqttRepository.mqtt
+
+
+        val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        controlFragmentViewModel.serverAddress.value =
+            sharedPreferences?.getString("serverIP", "test.mosquitto.org:1883")
+
+        controlFragmentViewModel.serverAddress.observe(this) { address ->
+            sharedPreferences?.edit()?.putString("serverIP", address)?.apply()
+        }
     }
 
     private val mqttCallback = object : MqttCallbackExtended {
         override fun connectComplete(reconnect: Boolean, serverURI: String?) {
             Log.d("aaa", "connectComplete")
             controlFragmentViewModel.tvString.value = "Connected"
-            mqtt.subscribe(controlFragmentViewModel.MQTTtelemetryTopic)
+            mqtt.subscribe(MQTTtelemetryTopic)
+            controlFragmentViewModel.connectionStatus.value = true
         }
 
         override fun messageArrived(topic: String?, message: MqttMessage?) {
             Log.d("aaa", "messageArrived: $topic :" + message.toString())
             controlFragmentViewModel.tvString.value = message.toString()
 
-            if (topic == controlFragmentViewModel.MQTTcontrolTopic) {
+            if (topic == MQTTcontrolTopic) {
                 val b = message.toString().toByteArray()
                 if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
                     val x: Float = -(b[2] - 100) / 100f
@@ -77,6 +91,8 @@ class MainActivity : AppCompatActivity() {
         override fun connectionLost(cause: Throwable?) {
             Log.d("aaa", "connectionLost")
             controlFragmentViewModel.tvString.value = "Connection lost"
+
+            controlFragmentViewModel.connectionStatus.value = false
         }
 
         override fun deliveryComplete(token: IMqttDeliveryToken?) {
@@ -88,7 +104,8 @@ class MainActivity : AppCompatActivity() {
     fun connectToMQTT() {
         val url = "tcp://" + controlFragmentViewModel.serverAddress.value
         if (mqtt.isConnected()) mqtt.close()
-        controlFragmentViewModel.tvString.value = "Connecting to ${controlFragmentViewModel.serverAddress.value}"
+        controlFragmentViewModel.tvString.value =
+            "Connecting to ${controlFragmentViewModel.serverAddress.value}"
         mqtt.connect(
             this,
             url,

@@ -20,11 +20,11 @@
 
 package com.eziosoft.mqtt_test.ui
 
-import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.webkit.RenderProcessGoneDetail
 import android.widget.Button
 import android.widget.TableRow
 import androidx.fragment.app.Fragment
@@ -33,9 +33,9 @@ import androidx.lifecycle.Observer
 import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainActivity
 import com.eziosoft.mqtt_test.R
+import com.eziosoft.mqtt_test.data.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
-import com.longdo.mjpegviewer.MjpegView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.control_fragment.*
 import javax.inject.Inject
@@ -47,14 +47,12 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
     @Inject
     lateinit var mqttRepository: MqttRepository
+    private val controlFragmentViewModel by activityViewModels<ControlFragmentViewModel>()
 
-    private val controlFragmentViewModel: ControlFragmentViewModel by activityViewModels()
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        val sharedPreferences = activity?.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        serverIP.setText(sharedPreferences?.getString("serverIP", "test.mosquitto.org:1883"))
 
         precisionSwich.isChecked = true
 
@@ -75,35 +73,45 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         switchVideo.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                mqttRepository.mqtt.subscribe(controlFragmentViewModel.MQTTvideoTopic)
                 switchVideo.visibility = View.GONE
+                webView.settings.loadWithOverviewMode = true;
+                webView.settings.useWideViewPort = true;
+                webView.loadUrl("http://192.168.0.56:8080/browserfs.html")
             }
         }
 
         watchSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                mqttRepository.mqtt.subscribe(controlFragmentViewModel.MQTTcontrolTopic)
+                mqttRepository.mqtt.subscribe(MQTTcontrolTopic)
             } else {
-                mqttRepository.mqtt.mqttClient.unsubscribe(controlFragmentViewModel.MQTTcontrolTopic)
+                mqttRepository.mqtt.mqttClient.unsubscribe(MQTTcontrolTopic)
             }
         }
 
         connectButton.setOnClickListener()
         {
-            sharedPreferences?.edit()?.putString("serverIP", serverIP.text.toString())?.apply()
             controlFragmentViewModel.serverAddress.value = serverIP.text.toString()
             (activity as MainActivity).connectToMQTT()
         }
 
-        val tvStringObserver = Observer<String> { s ->
+
+        //Add this.onClickListener to buttons in tableLayout
+        for (i in 0 until tableLayout.childCount) {
+            val row = tableLayout.getChildAt(i) as TableRow
+            for (j in 0 until row.childCount) {
+                val button = row.getChildAt(j)
+                if (button is Button) button.setOnClickListener(this)
+            }
+        }
+
+
+        controlFragmentViewModel.tvString.observe(viewLifecycleOwner) { s ->
             TV.text = s
         }
-        controlFragmentViewModel.tvString.observe(viewLifecycleOwner, tvStringObserver)
 
-        val serverAddressObserver = Observer<String> { ip ->
+        controlFragmentViewModel.serverAddress.observe(viewLifecycleOwner) { ip ->
             serverIP.setText(ip)
         }
-        controlFragmentViewModel.serverAddress.observe(viewLifecycleOwner, serverAddressObserver)
 
 
         val joyObserver = Observer<Float> {
@@ -115,17 +123,21 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         controlFragmentViewModel.joyX.observe(viewLifecycleOwner, joyObserver)
         controlFragmentViewModel.joyY.observe(viewLifecycleOwner, joyObserver)
 
-        //Add this.onClickListener to buttons in tableLayout
-        Log.d("bbb", tableLayout.childCount.toString())
-        for (i in 0 until tableLayout.childCount) {
-            val row = tableLayout.getChildAt(i) as TableRow
-            for (j in 0 until row.childCount) {
-                val button = row.getChildAt(j)
-                if (button is Button) button.setOnClickListener(this)
+
+        controlFragmentViewModel.connectionStatus.observe(viewLifecycleOwner) { connected ->
+            if (connected) {
+                serverIP.visibility = View.GONE
+                connectButton.visibility = View.GONE
+
+            } else {
+                serverIP.visibility = View.VISIBLE
+                connectButton.visibility = View.VISIBLE
             }
+
         }
     }
 
+    //handle tableLayout buttons
     override fun onClick(v: View?) {
         when (v?.id) {
             buttonStart.id -> sendCommandsChannels(2, 0)
@@ -144,10 +156,10 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         var x = cos(Math.toRadians(angle.toDouble())) * strength / 100f
         var y = sin(Math.toRadians(angle.toDouble())) * strength / 100f
 
-        val ch1: Int
-        val ch2: Int
-        val ch3: Int
-        val ch4: Int
+        var ch1 = 0
+        var ch2 = 0
+        val ch3 = 0
+        val ch4 = 0
 
         if (precisionSwich.isChecked) {
             x /= 4f
@@ -156,8 +168,6 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         ch1 = (-x * 100).toInt()
         ch2 = (y * 100).toInt()
-        ch3 = 0 //middle position
-        ch4 = 0 //middle position
 
         if (BuildConfig.DEBUG)
             Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
@@ -181,7 +191,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                 (ch4 + 100).toByte()
             )
         if (mqttRepository.mqtt.isConnected()) mqttRepository.mqtt.publish(
-            controlFragmentViewModel.MQTTcontrolTopic,
+            MQTTcontrolTopic,
             bytes
         )
     }
@@ -191,21 +201,5 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         sendChannels(0, 0, ch3, ch4)
     }
 
-    private fun startMJPEGStream(url: String) {
-//        Log.d("aaa", "startMJPEG")
-//        Toast.makeText(this, "starting video : $url", Toast.LENGTH_SHORT).show()
-        mjpegview.apply {
-            mode = MjpegView.MODE_FIT_WIDTH
-            isRecycleBitmap = true
-            setUrl(url)
-            startStream()
-        }
-    }
 
-    private fun stopMJPEGStream() {
-        try {
-            mjpegview.stopStream()
-        } catch (e: Exception) {
-        }
-    }
 }

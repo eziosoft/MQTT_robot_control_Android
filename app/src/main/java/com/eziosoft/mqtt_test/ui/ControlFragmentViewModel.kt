@@ -20,14 +20,14 @@
 
 package com.eziosoft.mqtt_test.ui
 
+import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class ControlFragmentViewModel : ViewModel() {
+class ControlFragmentViewModel @ViewModelInject constructor() : ViewModel() {
 
     val tvString: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
-
     }
 
     val serverAddress: MutableLiveData<String> by lazy {
@@ -39,8 +39,7 @@ class ControlFragmentViewModel : ViewModel() {
 
 
     var t: Long = 0
-    private val robotName = "tank"
-    val MQTTcontrolTopic = "$robotName/in"
-    val MQTTtelemetryTopic = "$robotName/out"
-    val MQTTvideoTopic = "$robotName/video"
+
+    val connectionStatus :MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
+
 }

@@ -1,10 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~  This file is part of MQTT_robot_control_Android.
+  ~
+  ~     MQTT_robot_control_Android is free software: you can redistribute it and/or modify
+  ~     it under the terms of the GNU General Public License as published by
+  ~     the Free Software Foundation, either version 3 of the License, or
+  ~     (at your option) any later version.
+  ~
+  ~     Foobar is distributed in the hope that it will be useful,
+  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~     GNU General Public License for more details.
+  ~
+  ~     You should have received a copy of the GNU General Public License
+  ~     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Copyright (c) 2020. Bartosz Szczygiel
+  ~
+  -->
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".ui.ControlFragment"
+        >
 
     <TextView
             android:id="@+id/TV"
@@ -39,14 +60,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent" />
 
-    <com.longdo.mjpegviewer.MjpegView
-            android:id="@+id/mjpegview"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/joystickView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/TV" />
+
 
     <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/watchSwitch"
@@ -93,24 +107,13 @@
             app:layout_constraintStart_toEndOf="@+id/serverIP"
             app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switchVideo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:text="video"
-            app:layout_constraintStart_toStartOf="@+id/mjpegview"
-            app:layout_constraintTop_toTopOf="@+id/mjpegview" />
-
     <TableLayout
             android:id="@+id/tableLayout"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             app:layout_constraintBottom_toTopOf="@+id/joystickView"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/switchVideo">
+            app:layout_constraintStart_toStartOf="parent">
 
         <TableRow
                 android:layout_width="match_parent"
@@ -189,5 +192,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
     </TableLayout>
+
+    <WebView
+            android:id="@+id/webView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/tableLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/TV" />
+
+    <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="video"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/TV" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
