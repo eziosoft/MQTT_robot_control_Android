@@ -22,7 +22,7 @@ package com.eziosoft.mqtt_test.data
 
 import javax.inject.Inject
 
-class MqttRepository @Inject constructor(private val mqtt: MqttHelper)
+class MqttRepository @Inject constructor(private val mqtt: Mqtt)
 {
     fun getMqtt() = mqtt
 }

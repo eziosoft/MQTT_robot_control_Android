@@ -18,15 +18,16 @@
  *
  */
 
-package com.eziosoft.mqtt_test
+package com.eziosoft.mqtt_test.ui
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class MainViewModel : ViewModel() {
+class ControlFragmentViewModel : ViewModel() {
 
     val tvString: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
+
     }
 
     val serverAddress: MutableLiveData<String> by lazy {

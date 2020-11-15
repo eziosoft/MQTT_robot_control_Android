@@ -22,6 +22,7 @@ package com.eziosoft.mqtt_test.data
 
 import android.content.Context
 import android.util.Log
+import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
@@ -32,8 +33,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MqttHelper @Inject constructor(
-    @ApplicationContext private val context: Context,
+class Mqtt @Inject constructor(
     private val mqttConnectOptions: MqttConnectOptions
 ) {
     private val TAG = "aaa"
@@ -41,6 +41,7 @@ class MqttHelper @Inject constructor(
     lateinit var mqttClient: MqttAndroidClient
 
     fun connect(
+        context: Context,
         brokerURL: String,
         clientID: String,
         callbackExtended: MqttCallbackExtended
