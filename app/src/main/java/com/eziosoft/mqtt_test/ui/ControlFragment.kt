@@ -24,7 +24,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.webkit.RenderProcessGoneDetail
 import android.widget.Button
 import android.widget.TableRow
 import androidx.fragment.app.Fragment
@@ -32,9 +31,11 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainActivity
+import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.data.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
+import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.control_fragment.*
@@ -47,11 +48,13 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
     @Inject
     lateinit var mqttRepository: MqttRepository
-    private val controlFragmentViewModel by activityViewModels<ControlFragmentViewModel>()
+    private val controlFragmentViewModel by activityViewModels<MainViewModel>()
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+//        val binding = ControlFragmentBinding.bind(view)
+//        binding.apply { }
 
 
         precisionSwich.isChecked = true
@@ -135,6 +138,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             }
 
         }
+
     }
 
     //handle tableLayout buttons

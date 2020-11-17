@@ -18,13 +18,13 @@
  *
  */
 
-package com.eziosoft.mqtt_test.ui
+package com.eziosoft.mqtt_test
 
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class ControlFragmentViewModel @ViewModelInject constructor() : ViewModel() {
+class MainViewModel @ViewModelInject constructor() : ViewModel() {
 
     val tvString: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
