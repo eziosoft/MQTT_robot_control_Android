@@ -26,6 +26,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TableRow
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
@@ -76,7 +77,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         switchVideo.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                switchVideo.visibility = View.GONE
+                switchVideo.isVisible = false
                 webView.settings.loadWithOverviewMode = true;
                 webView.settings.useWideViewPort = true;
                 webView.loadUrl("http://192.168.0.56:8080/browserfs.html")
@@ -129,12 +130,12 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         controlFragmentViewModel.connectionStatus.observe(viewLifecycleOwner) { connected ->
             if (connected) {
-                serverIP.visibility = View.GONE
-                connectButton.visibility = View.GONE
+                serverIP.isVisible = false
+                connectButton.isVisible = false
 
             } else {
-                serverIP.visibility = View.VISIBLE
-                connectButton.visibility = View.VISIBLE
+                serverIP.isVisible = true
+                connectButton.isVisible = true
             }
 
         }

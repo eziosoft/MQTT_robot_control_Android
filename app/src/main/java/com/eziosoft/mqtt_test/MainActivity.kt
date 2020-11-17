@@ -25,6 +25,12 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
 import com.eziosoft.mqtt_test.data.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MQTTtelemetryTopic
 import com.eziosoft.mqtt_test.data.Mqtt
@@ -40,6 +46,8 @@ class MainActivity : AppCompatActivity() {
 
     val mainViewModel: MainViewModel by viewModels()
 
+    private lateinit var navController: NavController
+
     @Inject
     lateinit var mqttRepository: MqttRepository
     lateinit var mqtt: Mqtt
@@ -47,6 +55,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
+        navController = navHostFragment.findNavController()
+        val appBarConfiguration = AppBarConfiguration((navController.graph))
+        setupActionBarWithNavController(navController, appBarConfiguration)
+
         mqtt = mqttRepository.mqtt
 
 
@@ -57,6 +72,10 @@ class MainActivity : AppCompatActivity() {
         mainViewModel.serverAddress.observe(this) { address ->
             sharedPreferences?.edit()?.putString("serverIP", address)?.apply()
         }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
     private val mqttCallback = object : MqttCallbackExtended {

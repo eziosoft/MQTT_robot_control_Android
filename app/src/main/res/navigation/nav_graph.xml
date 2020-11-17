@@ -27,5 +27,5 @@
     <fragment
             android:id="@+id/controlFragment"
             android:name="com.eziosoft.mqtt_test.ui.ControlFragment"
-            android:label="ControlFragment" />
+            android:label="Roomba Control" />
 </navigation>
