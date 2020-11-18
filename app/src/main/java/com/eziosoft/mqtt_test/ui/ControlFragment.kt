@@ -52,7 +52,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
     private val binding get() = _binding!!
 
     @Inject
-    private lateinit var mqttRepository: MqttRepository
+    lateinit var mqttRepository: MqttRepository
     private val controlFragmentViewModel by activityViewModels<MainViewModel>()
 
 
