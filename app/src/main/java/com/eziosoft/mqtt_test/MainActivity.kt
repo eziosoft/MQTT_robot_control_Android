@@ -119,14 +119,20 @@ class MainActivity : AppCompatActivity() {
 
 
     fun connectToMQTT() {
+//        mainViewModel.serverAddress.value = "mqtt.flespi.io:1883" //T
+        val userName = "27aQSfkPYPrH1WHfjsDejLIqJxTza4i21gIHlTn8wEDlqarztSBAr7O0swnsqvi"
+
         val url = "tcp://" + mainViewModel.serverAddress.value
+
         if (mqtt.isConnected()) mqtt.close()
         mainViewModel.tvString.value =
-            "Connecting to ${mainViewModel.serverAddress.value}"
+            getString(R.string.connectig_to, mainViewModel.serverAddress.value)
+
         mqtt.connect(
             this,
             url,
             "user${System.currentTimeMillis()}",
+            userName,
             mqttCallback
         )
     }

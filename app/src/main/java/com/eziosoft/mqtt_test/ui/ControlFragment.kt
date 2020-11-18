@@ -23,7 +23,9 @@ package com.eziosoft.mqtt_test.ui
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TableRow
 import androidx.core.view.isVisible
@@ -39,7 +41,6 @@ import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.control_fragment.*
 import javax.inject.Inject
 import kotlin.math.cos
 import kotlin.math.sin
@@ -47,20 +48,29 @@ import kotlin.math.sin
 @AndroidEntryPoint
 class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListener {
 
+    private var _binding: ControlFragmentBinding? = null
+    private val binding get() = _binding!!
+
     @Inject
-    lateinit var mqttRepository: MqttRepository
+    private lateinit var mqttRepository: MqttRepository
     private val controlFragmentViewModel by activityViewModels<MainViewModel>()
+
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = ControlFragmentBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-//        val binding = ControlFragmentBinding.bind(view)
-//        binding.apply { }
+        binding.precisionSwich.isChecked = true
 
-
-        precisionSwich.isChecked = true
-
-        joystickView.apply {
+        binding.joystickView.apply {
             setBackgroundColor(Color.TRANSPARENT)
             setBorderWidth(5)
             setBorderColor(Color.BLUE)
@@ -75,16 +85,16 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             }
         }
 
-        switchVideo.setOnCheckedChangeListener { _, isChecked ->
+        binding.switchVideo.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                switchVideo.isVisible = false
-                webView.settings.loadWithOverviewMode = true;
-                webView.settings.useWideViewPort = true;
-                webView.loadUrl("http://192.168.0.56:8080/browserfs.html")
+                binding.switchVideo.isVisible = false
+                binding.webView.settings.loadWithOverviewMode = true;
+                binding.webView.settings.useWideViewPort = true;
+                binding.webView.loadUrl("http://192.168.0.56:8080/browserfs.html")
             }
         }
 
-        watchSwitch.setOnCheckedChangeListener { _, isChecked ->
+        binding.watchSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 mqttRepository.mqtt.subscribe(MQTTcontrolTopic)
             } else {
@@ -92,16 +102,16 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             }
         }
 
-        connectButton.setOnClickListener()
+        binding.connectButton.setOnClickListener()
         {
-            controlFragmentViewModel.serverAddress.value = serverIP.text.toString()
+            controlFragmentViewModel.serverAddress.value = binding.serverIP.text.toString()
             (activity as MainActivity).connectToMQTT()
         }
 
 
         //Add this.onClickListener to buttons in tableLayout
-        for (i in 0 until tableLayout.childCount) {
-            val row = tableLayout.getChildAt(i) as TableRow
+        for (i in 0 until binding.tableLayout.childCount) {
+            val row = binding.tableLayout.getChildAt(i) as TableRow
             for (j in 0 until row.childCount) {
                 val button = row.getChildAt(j)
                 if (button is Button) button.setOnClickListener(this)
@@ -110,16 +120,16 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
 
         controlFragmentViewModel.tvString.observe(viewLifecycleOwner) { s ->
-            TV.text = s
+            binding.TV.text = s
         }
 
         controlFragmentViewModel.serverAddress.observe(viewLifecycleOwner) { ip ->
-            serverIP.setText(ip)
+            binding.serverIP.setText(ip)
         }
 
 
         val joyObserver = Observer<Float> {
-            joystickView.setPosition(
+            binding.joystickView.setPosition(
                 controlFragmentViewModel.joyX.value!!,
                 controlFragmentViewModel.joyY.value!!
             )
@@ -130,12 +140,12 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         controlFragmentViewModel.connectionStatus.observe(viewLifecycleOwner) { connected ->
             if (connected) {
-                serverIP.isVisible = false
-                connectButton.isVisible = false
+                binding.serverIP.isVisible = false
+                binding.connectButton.isVisible = false
 
             } else {
-                serverIP.isVisible = true
-                connectButton.isVisible = true
+                binding.serverIP.isVisible = true
+                binding.connectButton.isVisible = true
             }
 
         }
@@ -145,14 +155,14 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
     //handle tableLayout buttons
     override fun onClick(v: View?) {
         when (v?.id) {
-            buttonStart.id -> sendCommandsChannels(2, 0)
-            buttonStop.id -> sendCommandsChannels(1, 0)
-            buttonStopBrush.id -> sendCommandsChannels(11, 0)
-            buttonStartBrush.id -> sendCommandsChannels(10, 0)
-            buttonClean.id -> sendCommandsChannels(12, 0)
-            buttonDock.id -> sendCommandsChannels(3, 0)
-            buttonUnDock.id -> sendCommandsChannels(4, 0)
-            buttonGetSensors.id -> sendCommandsChannels(20, 0)
+            binding.buttonStart.id -> sendCommandsChannels(2, 0)
+            binding.buttonStop.id -> sendCommandsChannels(1, 0)
+            binding.buttonStopBrush.id -> sendCommandsChannels(11, 0)
+            binding.buttonStartBrush.id -> sendCommandsChannels(10, 0)
+            binding.buttonClean.id -> sendCommandsChannels(12, 0)
+            binding.buttonDock.id -> sendCommandsChannels(3, 0)
+            binding.buttonUnDock.id -> sendCommandsChannels(4, 0)
+            binding.buttonGetSensors.id -> sendCommandsChannels(20, 0)
         }
     }
 
@@ -166,7 +176,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         val ch3 = 0
         val ch4 = 0
 
-        if (precisionSwich.isChecked) {
+        if (binding.precisionSwich.isChecked) {
             x /= 4f
             y /= 4f
         }
@@ -179,7 +189,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > controlFragmentViewModel.t)) {
             controlFragmentViewModel.t = System.currentTimeMillis() + 100
-            if (!watchSwitch.isChecked)
+            if (!binding.watchSwitch.isChecked)
                 if (mqttRepository.mqtt.isConnected())
                     sendChannels(ch1, ch2, ch3, ch4)
         }
@@ -206,5 +216,8 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         sendChannels(0, 0, ch3, ch4)
     }
 
-
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

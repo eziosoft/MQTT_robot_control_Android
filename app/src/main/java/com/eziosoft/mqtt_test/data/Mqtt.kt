@@ -32,7 +32,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val robotName = "tank"
+val robotName = "tank"
 val MQTTcontrolTopic = "$robotName/in"
 val MQTTtelemetryTopic = "$robotName/out"
 
@@ -48,8 +48,11 @@ class Mqtt @Inject constructor(
         context: Context,
         brokerURL: String,
         clientID: String,
+        userName: String,
         callbackExtended: MqttCallbackExtended
     ) {
+        mqttConnectOptions.userName = userName
+
         Log.d(TAG, "connect")
         mqttClient = MqttAndroidClient(context, brokerURL, clientID).apply {
             setCallback(callbackExtended)
