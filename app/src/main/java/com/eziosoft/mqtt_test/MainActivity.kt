@@ -26,18 +26,22 @@ import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.eziosoft.mqtt_test.data.MQTTcontrolTopic
-import com.eziosoft.mqtt_test.data.MQTTtelemetryTopic
 import com.eziosoft.mqtt_test.data.Mqtt
+import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTStreamTopic
+import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
+import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTtelemetryTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
+import com.eziosoft.mqtt_test.data.RoombaSensors
+import com.eziosoft.mqtt_test.data.SensorParser
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.inject.Inject
 
@@ -52,9 +56,14 @@ class MainActivity : AppCompatActivity() {
     lateinit var mqttRepository: MqttRepository
     lateinit var mqtt: Mqtt
 
+    lateinit var sensorParser: SensorParser
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+
+        Log.d("aaa", RoombaSensors.getSensor(22)?.name)
+
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
@@ -62,7 +71,13 @@ class MainActivity : AppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration((navController.graph))
         setupActionBarWithNavController(navController, appBarConfiguration)
 
+        sensorParser = SensorParser(object:SensorParser.SensorListener {
+            override fun onSensor(parsedSensor: SensorParser.ParsedSensor) {
+                Log.i("ooo",parsedSensor.toString())
+            }
+        })
         mqtt = mqttRepository.mqtt
+        mqtt.setListener(mqttListener)
 
 
         val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -78,43 +93,59 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    private val mqttCallback = object : MqttCallbackExtended {
-        override fun connectComplete(reconnect: Boolean, serverURI: String?) {
+
+    @ExperimentalUnsignedTypes
+    private val mqttListener = object : Mqtt.MqttListener {
+        override fun onConnectComplete(reconnect: Boolean, serverURI: String?) {
             Log.d("aaa", "connectComplete")
             mainViewModel.tvString.value = "Connected"
             mqtt.subscribe(MQTTtelemetryTopic)
+            mqtt.subscribe(MQTTStreamTopic)
             mainViewModel.connectionStatus.value = true
         }
 
-        override fun messageArrived(topic: String?, message: MqttMessage?) {
-            Log.d("aaa", "messageArrived: $topic :" + message.toString())
-            mainViewModel.tvString.value = message.toString()
+        override fun onMessageArrived(topic: String?, message: MqttMessage?) {
 
-            if (topic == MQTTcontrolTopic) {
-                val b = message.toString().toByteArray()
-                if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
-                    val x: Float = -(b[2] - 100) / 100f
-                    val y: Float = -(b[3] - 100) / 100f
 
-                    mainViewModel.apply {
-                        joyX.value = x
-                        joyY.value = y
+            when (topic) {
+
+                MQTTtelemetryTopic -> {
+                    mainViewModel.tvString.value =
+                        message.toString() + " " + mainViewModel.voltage.value.toString()
+                }
+                MQTTcontrolTopic -> {
+
+                    Log.d("aaa", "messageArrived: $topic :" + message.toString())
+                    val b = message.toString().toByteArray()
+                    if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
+                        val x: Float = -(b[2] - 100) / 100f
+                        val y: Float = -(b[3] - 100) / 100f
+
+                        mainViewModel.apply {
+                            joyX.value = x
+                            joyY.value = y
+                        }
                     }
+                }
 
+                MQTTStreamTopic -> {
+                    GlobalScope.launch(Dispatchers.IO) {
+                        message?.payload?.toUByteArray()?.let { sensorParser.parse(it) }
+                    }
                 }
             }
         }
 
-        override fun connectionLost(cause: Throwable?) {
+
+        override fun onConnectionLost(cause: Throwable?) {
             Log.d("aaa", "connectionLost")
             mainViewModel.tvString.value = "Connection lost"
-
             mainViewModel.connectionStatus.value = false
         }
 
-        override fun deliveryComplete(token: IMqttDeliveryToken?) {
-            Log.d("aaa", "deliveryComplete")
+        override fun onDeliveryComplete(token: IMqttDeliveryToken?) {
         }
+
     }
 
 
@@ -132,10 +163,10 @@ class MainActivity : AppCompatActivity() {
             this,
             url,
             "user${System.currentTimeMillis()}",
-            userName,
-            mqttCallback
+            userName
         )
     }
 
 
 }
+

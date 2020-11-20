@@ -173,6 +173,13 @@
                     android:layout_height="wrap_content"
                     android:text="Clean" />
 
+            <Button
+                    android:id="@+id/buttonPowerOff"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Power off" />
+
         </TableRow>
 
         <TableRow
@@ -180,11 +187,18 @@
                 android:layout_height="match_parent">
 
             <Button
-                    android:id="@+id/buttonGetSensors"
+                    android:id="@+id/buttonStartStream"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Get Sensors" />
+                    android:text="start stream" />
+
+            <Button
+                    android:id="@+id/buttonPauseStream"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="pause stream" />
         </TableRow>
 
 

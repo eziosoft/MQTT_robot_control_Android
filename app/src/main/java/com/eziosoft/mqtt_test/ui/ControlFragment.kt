@@ -36,7 +36,7 @@ import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainActivity
 import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
-import com.eziosoft.mqtt_test.data.MQTTcontrolTopic
+import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
@@ -162,7 +162,9 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             binding.buttonClean.id -> sendCommandsChannels(12, 0)
             binding.buttonDock.id -> sendCommandsChannels(3, 0)
             binding.buttonUnDock.id -> sendCommandsChannels(4, 0)
-            binding.buttonGetSensors.id -> sendCommandsChannels(20, 0)
+            binding.buttonPowerOff.id -> sendCommandsChannels(5, 0)
+            binding.buttonStartStream.id -> sendCommandsChannels(20, 0)
+            binding.buttonPauseStream.id -> sendCommandsChannels(21, 0)
         }
     }
 

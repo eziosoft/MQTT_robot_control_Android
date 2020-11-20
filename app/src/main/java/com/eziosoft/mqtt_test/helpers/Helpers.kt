@@ -27,6 +27,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
+ fun byteToInt(bytes: ByteArray): Int {
+    var result = 0
+    var shift = 0
+    for (byte in bytes) {
+        result = result or (byte.toInt() shl shift)
+        shift += 8
+    }
+    return result
+}
+
+fun ByteArray.toHexString() = joinToString(" ") { "%02x".format(it) }
+
 fun decryptStringWithXORFromHex(input: String, key: String): String {
     var k = key
     val c = StringBuilder()
