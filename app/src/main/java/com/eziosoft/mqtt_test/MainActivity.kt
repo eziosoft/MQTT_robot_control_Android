@@ -45,6 +45,7 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.inject.Inject
 
+@ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
@@ -71,9 +72,13 @@ class MainActivity : AppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration((navController.graph))
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        sensorParser = SensorParser(object:SensorParser.SensorListener {
-            override fun onSensor(parsedSensor: SensorParser.ParsedSensor) {
-                Log.i("ooo",parsedSensor.toString())
+        sensorParser = SensorParser(object : SensorParser.SensorListener {
+            override fun onSensors(sensors: List<SensorParser.ParsedSensor>) {
+
+            }
+
+            override fun onChkSumError() {
+
             }
         })
         mqtt = mqttRepository.mqtt

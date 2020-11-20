@@ -20,21 +20,21 @@
 
 package com.eziosoft.mqtt_test.data
 
-import android.util.Log
-import java.lang.Exception
-import javax.inject.Inject
+import java.util.ArrayList
 import javax.inject.Singleton
 
 
 enum class STATE {
-    NONE, AFTER_HEADER, AFTER_N, AFTER_SENSOR_ID, AFTER_1B, AFTER_2B
+    HEADER, N, PACKET_ID, PACKET_DATA1, PACKET_DATA2, CHKSUM_OR_NEXT_SENSOR
 }
 
+@ExperimentalUnsignedTypes
 @Singleton
-class SensorParser(private val sensorListener: SensorListener) {
+class SensorParser(val sensorListener: SensorListener) {
 
     interface SensorListener {
-        fun onSensor(parsedSensor: ParsedSensor)
+        fun onSensors(sensors: List<ParsedSensor>)
+        fun onChkSumError()
     }
 
     data class ParsedSensor @ExperimentalUnsignedTypes constructor(
@@ -46,86 +46,97 @@ class SensorParser(private val sensorListener: SensorListener) {
         var units: String? = RoombaSensors.getSensor(sensorID.toInt())?.unit
     )
 
+    var state = STATE.HEADER
+    var n: UByte = 0u
+    var ni = 0
+    var chksum: UByte = 0u
+    var b1: UByte = 0u
+    var b2: UByte = 0u
+    var value = 0
+    var packetID: UByte = 0u
+
+    var sensors = arrayListOf<ParsedSensor>()
+
     @ExperimentalUnsignedTypes
     suspend fun parse(bytes: UByteArray) {
-        var state = STATE.NONE
-        var n: UByte = 0.toUByte()
-        var chksum: UByte = 0.toUByte()
-        var frameStartByte = 0
-        var b1: UByte = 0u
-        var b2: UByte = 0u
-        var value: Int = 0
-        var sensorID: UByte = 0u
-
-        Log.d("sss", "s")
         for (i in bytes.indices) {
             val b = bytes[i]
 
+//            println(state.name)
             when (state) {
-                STATE.NONE -> if (b == 19.toUByte()) {
-                    state = STATE.AFTER_HEADER
-                    frameStartByte = i
+                STATE.HEADER -> if (b == 19.toUByte()) {
+                    chksum = 0u
+                    n = 0u
+                    ni = 0
+                    chksum = 0u
+                    b1 = 0u
+                    b2 = 0u
+                    value = 0
+                    packetID = 0u
+                    chksum = (chksum + b).toUByte()
+                    sensors.clear()
+//                    println("$n == $ni")
+                    state = STATE.N
                 }
-                STATE.AFTER_HEADER -> {
+                STATE.N -> {
                     n = b
-                    state = STATE.AFTER_N
+                    chksum = (chksum + b).toUByte()
+                    state = STATE.PACKET_ID
+//                    println("$n == $ni")
                 }
-                STATE.AFTER_N -> {
-                    sensorID = b
-                    state = STATE.AFTER_SENSOR_ID
+                STATE.PACKET_ID -> {
+                    packetID = b
+                    chksum = (chksum + b).toUByte()
+                    ni++
+                    state = STATE.PACKET_DATA1
+//                    println("$n == $ni")
                 }
-                STATE.AFTER_SENSOR_ID -> {
+                STATE.PACKET_DATA1 -> {
                     b1 = b
-                    try {
-                        when (RoombaSensors.getSensor(sensorID.toInt())?.bytesCount) {
-                            1 -> state = STATE.AFTER_2B
-                            2 -> state = STATE.AFTER_1B
-                        }
-                    } catch (e: Exception) {
-                        state = STATE.NONE
+                    chksum = (chksum + b).toUByte()
+                    ni++
+//                    println("$n == $ni")
+
+                    when (RoombaSensors.getSensor(packetID.toInt())?.bytesCount) {
+                        1 -> state = STATE.CHKSUM_OR_NEXT_SENSOR
+                        2 -> state = STATE.PACKET_DATA2
                     }
                 }
 
-                STATE.AFTER_1B -> {
+                STATE.PACKET_DATA2 -> {
                     b2 = b
-                    state = STATE.AFTER_2B
+                    chksum = (chksum + b).toUByte()
+                    ni++
+//                    println("$n == $ni")
+                    state = STATE.CHKSUM_OR_NEXT_SENSOR
                 }
 
-                STATE.AFTER_2B -> {
-                    if (RoombaSensors.getSensor(sensorID.toInt())?.bytesCount == 2) {
+                STATE.CHKSUM_OR_NEXT_SENSOR -> {
+                    if (RoombaSensors.getSensor(packetID.toInt())?.bytesCount == 2) {
                         value = (b1.toInt() * 256 + b2.toInt()).toInt()
                     } else {
                         value = b1.toInt()
                     }
+                    sensors.add(ParsedSensor(packetID, b1, b2, value))
 
-                    Log.d(
-                        "sss",
-                        "${RoombaSensors.getSensor(sensorID.toInt())?.name}=$value${
-                            RoombaSensors.getSensor(
-                                sensorID.toInt()
-                            )?.unit
-                        } ->  n=$n sensorID=$sensorID b1=$b1 b2=$b2 chksum=$chksum value=${value} "
-                    )
 
-                    sensorListener?.onSensor(ParsedSensor(sensorID, b1, b2, value))
-
-                    if (i - frameStartByte - 2 == n.toInt()) {
-                        chksum = b
-                        var sum: UByte = 0u;
-                        for (j in frameStartByte..i) {
-                            sum = (sum.plus(bytes[j])).toUByte()
+//                    println("$n == $ni")
+                    if (n.toInt() == ni) {
+                        chksum = (chksum + b).toUByte()
+                        if (chksum == 0.toUByte()) {//check sum correct
+//                            println("chksum OK")
+                            sensorListener.onSensors(sensors)
+                        } else {
+                            sensorListener.onChkSumError()
+                            state = STATE.HEADER
                         }
-                        if (sum == 0.toUByte()) {//check sum correct
-                            //TODO
-//                                        withContext(Dispatchers.Main) {
-//                                            mainViewModel.voltage.value = value.toFloat() / 1000f
-//                                        }
-
-                        }
-                        state = STATE.NONE
+                        state = STATE.HEADER
                     } else {
-                        sensorID = b
-                        state = STATE.AFTER_SENSOR_ID
+//                        println("->next packet")
+                        packetID = b
+                        chksum = (chksum + b).toUByte()
+                        ni++
+                        state = STATE.PACKET_DATA1
                     }
                 }
             }
