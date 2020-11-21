@@ -23,8 +23,14 @@ package com.eziosoft.mqtt_test
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.eziosoft.mqtt_test.data.SensorParser
 
+@ExperimentalUnsignedTypes
 class MainViewModel @ViewModelInject constructor() : ViewModel() {
+
+    val sensorDataSet = arrayListOf<SensorParser.ParsedSensor>()
+
+    val dataSetChanged: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
 
     val tvString: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
@@ -43,5 +49,4 @@ class MainViewModel @ViewModelInject constructor() : ViewModel() {
     val connectionStatus: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
     val voltage: MutableLiveData<Float> by lazy { MutableLiveData<Float>() }
-
 }

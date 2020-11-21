@@ -40,10 +40,10 @@ class SensorParser(private val sensorListener: SensorListener) {
     var value = 0
     var packetID: UByte = 0u
 
-    var sensors = arrayListOf<ParsedSensor>()
+    private val sensors = arrayListOf<ParsedSensor>()
 
     interface SensorListener {
-        fun onSensors(sensors: List<ParsedSensor>)
+        fun onSensors(sensors: ArrayList<ParsedSensor>)
         fun onChkSumError()
     }
 

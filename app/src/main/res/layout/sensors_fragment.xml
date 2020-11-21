@@ -19,26 +19,17 @@
   -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="4dp">
+        android:layout_height="match_parent"
+        tools:context=".ui.SensorsFragment">
 
-    <TextView
-            android:id="@+id/sensorName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#000"
-            tools:text="Sensor Name" />
-
-    <TextView
-            android:layout_marginStart="8dp"
-            android:id="@+id/sensorValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#000"
-            tools:text="17.000V"
-            android:layout_toRightOf="@id/sensorName"
-            android:textStyle="bold"/>
-
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/recycle_view_item" />
 </RelativeLayout>

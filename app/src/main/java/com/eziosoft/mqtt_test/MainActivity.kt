@@ -38,10 +38,7 @@ import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.data.RoombaSensors
 import com.eziosoft.mqtt_test.data.SensorParser
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.inject.Inject
@@ -64,8 +61,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
 
-        Log.d("aaa", RoombaSensors.getSensor(22)?.name)
-
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
@@ -74,13 +69,17 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         sensorParser = SensorParser(object : SensorParser.SensorListener {
-            override fun onSensors(sensors: List<SensorParser.ParsedSensor>) {
-                var telemetry = ""
-                for (s in sensors) {
-                    telemetry += s.toString1() + "\n"
-                }
-
+            override fun onSensors(sensors: ArrayList<SensorParser.ParsedSensor>) {
                 GlobalScope.launch(Dispatchers.Main) {
+                    mainViewModel.sensorDataSet.clear()
+                    mainViewModel.sensorDataSet.addAll(sensors)
+
+                    mainViewModel.dataSetChanged.value = 0
+
+                    var telemetry = ""
+                    for (s in mainViewModel.sensorDataSet) {
+                        telemetry += s.toString1() + "\n"
+                    }
                     mainViewModel.tvString.value = telemetry
                 }
             }
@@ -118,16 +117,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onMessageArrived(topic: String?, message: MqttMessage?) {
-
-
             when (topic) {
-
                 MQTTtelemetryTopic -> {
                     mainViewModel.tvString.value =
                         message.toString() + " " + mainViewModel.voltage.value.toString()
                 }
                 MQTTcontrolTopic -> {
-
                     Log.d("aaa", "messageArrived: $topic :" + message.toString())
                     val b = message.toString().toByteArray()
                     if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
@@ -145,11 +140,6 @@ class MainActivity : AppCompatActivity() {
                     GlobalScope.launch(Dispatchers.IO) {
                         val bytes = message!!.payload!!.toUByteArray()
                         if (!bytes.isEmpty()) {
-//                        var s = ""
-//                        for (b in bytes) {
-//                            s += "${b.toString()}, "
-//                        }
-//                        Log.d("aaa", s)
                             sensorParser.parse(bytes)
                         }
                     }
@@ -188,6 +178,23 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    fun test() {
+        GlobalScope.launch(Dispatchers.Main) {
+            while (true) {
+                delay(10000)
+                val data1: UByteArray = ubyteArrayOf(5u, 5u, 8u, 65u, 18u, 18u, 19u, 5u, 29u, 2u)
+                val data2: UByteArray = ubyteArrayOf(25u, 13u, 0u)
+                val data3: UByteArray = ubyteArrayOf(163u, 5u, 5u, 8u, 65u, 18u, 18u)
+                sensorParser.parse(data1)
+                sensorParser.parse(data2)
+                sensorParser.parse(data3)
+            }
+        }
+    }
 
+    override fun onStart() {
+        super.onStart()
+//        test()
+    }
 }
 

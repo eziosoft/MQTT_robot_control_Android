@@ -32,6 +32,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainActivity
 import com.eziosoft.mqtt_test.MainViewModel
@@ -45,6 +46,7 @@ import javax.inject.Inject
 import kotlin.math.cos
 import kotlin.math.sin
 
+@ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListener {
 
@@ -53,7 +55,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
     @Inject
     lateinit var mqttRepository: MqttRepository
-    private val controlFragmentViewModel by activityViewModels<MainViewModel>()
+    private val mainViewModel by activityViewModels<MainViewModel>()
 
 
     override fun onCreateView(
@@ -104,7 +106,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         binding.connectButton.setOnClickListener()
         {
-            controlFragmentViewModel.serverAddress.value = binding.serverIP.text.toString()
+            mainViewModel.serverAddress.value = binding.serverIP.text.toString()
             (activity as MainActivity).connectToMQTT()
         }
 
@@ -119,26 +121,27 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         }
 
 
-        controlFragmentViewModel.tvString.observe(viewLifecycleOwner) { s ->
+        mainViewModel.tvString.observe(viewLifecycleOwner) { s ->
             binding.TV.text = s
         }
 
-        controlFragmentViewModel.serverAddress.observe(viewLifecycleOwner) { ip ->
+        mainViewModel.serverAddress.observe(viewLifecycleOwner) { ip ->
             binding.serverIP.setText(ip)
         }
 
 
+
         val joyObserver = Observer<Float> {
             binding.joystickView.setPosition(
-                controlFragmentViewModel.joyX.value!!,
-                controlFragmentViewModel.joyY.value!!
+                mainViewModel.joyX.value!!,
+                mainViewModel.joyY.value!!
             )
         }
-        controlFragmentViewModel.joyX.observe(viewLifecycleOwner, joyObserver)
-        controlFragmentViewModel.joyY.observe(viewLifecycleOwner, joyObserver)
+        mainViewModel.joyX.observe(viewLifecycleOwner, joyObserver)
+        mainViewModel.joyY.observe(viewLifecycleOwner, joyObserver)
 
 
-        controlFragmentViewModel.connectionStatus.observe(viewLifecycleOwner) { connected ->
+        mainViewModel.connectionStatus.observe(viewLifecycleOwner) { connected ->
             if (connected) {
                 binding.serverIP.isVisible = false
                 binding.connectButton.isVisible = false
@@ -165,6 +168,9 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             binding.buttonPowerOff.id -> sendCommandsChannels(5, 0)
             binding.buttonStartStream.id -> sendCommandsChannels(20, 0)
             binding.buttonPauseStream.id -> sendCommandsChannels(21, 0)
+            binding.buttonShowSensors.id -> findNavController().navigate(ControlFragmentDirections.actionControlFragmentToSensorsFragment())
+
+
         }
     }
 
@@ -189,8 +195,8 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         if (BuildConfig.DEBUG)
             Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
 
-        if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > controlFragmentViewModel.t)) {
-            controlFragmentViewModel.t = System.currentTimeMillis() + 100
+        if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > mainViewModel.t)) {
+            mainViewModel.t = System.currentTimeMillis() + 100
             if (!binding.watchSwitch.isChecked)
                 if (mqttRepository.mqtt.isConnected())
                     sendChannels(ch1, ch2, ch3, ch4)
