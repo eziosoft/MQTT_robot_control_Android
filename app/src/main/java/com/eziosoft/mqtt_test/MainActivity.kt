@@ -41,6 +41,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.inject.Inject
@@ -74,7 +75,14 @@ class MainActivity : AppCompatActivity() {
 
         sensorParser = SensorParser(object : SensorParser.SensorListener {
             override fun onSensors(sensors: List<SensorParser.ParsedSensor>) {
+                var telemetry = ""
+                for (s in sensors) {
+                    telemetry += s.toString1() + "\n"
+                }
 
+                GlobalScope.launch(Dispatchers.Main) {
+                    mainViewModel.tvString.value = telemetry
+                }
             }
 
             override fun onChkSumError() {
@@ -135,7 +143,15 @@ class MainActivity : AppCompatActivity() {
 
                 MQTTStreamTopic -> {
                     GlobalScope.launch(Dispatchers.IO) {
-                        message?.payload?.toUByteArray()?.let { sensorParser.parse(it) }
+                        val bytes = message!!.payload!!.toUByteArray()
+                        if (!bytes.isEmpty()) {
+//                        var s = ""
+//                        for (b in bytes) {
+//                            s += "${b.toString()}, "
+//                        }
+//                        Log.d("aaa", s)
+                            sensorParser.parse(bytes)
+                        }
                     }
                 }
             }

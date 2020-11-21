@@ -35,45 +35,54 @@ class ExampleUnitTest {
     @ExperimentalUnsignedTypes
     @Test
     fun parserTest() {
+        var count = 0
         val sensorParser = SensorParser(object : SensorParser.SensorListener {
 
             override fun onSensors(sensors: List<SensorParser.ParsedSensor>) {
-                for (s in sensors)
-                    println(s.toString())
+                for (i in sensors.indices)
+                    println("($i) ${sensors[i]}")
+                count = sensors.size
 
-                val testSensor1 = SensorParser.ParsedSensor(
+                val testSensor0 = SensorParser.ParsedSensor(
                     sensorID = 29u,
                     b1 = 2u,
                     b2 = 25u,
                     value = 537,
                     name = "Cliff Front Left Signal"
                 )
-                val testSensor2 = SensorParser.ParsedSensor(
+                val testSensor1 = SensorParser.ParsedSensor(
                     sensorID = 13u,
                     b1 = 0u,
-                    b2 = 25u,
+                    b2 = 0u,
                     value = 0,
                     name = "Virtual Wall"
                 )
-                assert(sensors[0] == testSensor1 && sensors[1] == testSensor2)
+                assertEquals("object are not identical", sensors[0], testSensor0)
+                assertEquals("object are not identical", sensors[1], testSensor1)
             }
 
             override fun onChkSumError() {
-                assert(false)
+                assert(false) { "check sum not correct" }
             }
         })
 
-        val data1: UByteArray = ubyteArrayOf(5u, 5u, 8u, 65u, 18u, 18u, 19u, 5u, 29u, 2u)
-        val data2: UByteArray = ubyteArrayOf(25u, 13u, 0u)
-        val data3: UByteArray = ubyteArrayOf(163u, 5u, 5u, 8u, 65u, 18u, 18u)
+
+
         runBlocking {
             launch(Dispatchers.Main) {
+                val data1: UByteArray = ubyteArrayOf(5u, 5u, 8u, 65u, 18u, 18u, 19u, 5u, 29u, 2u)
+                val data2: UByteArray = ubyteArrayOf(25u, 13u, 0u)
+                val data3: UByteArray = ubyteArrayOf(163u, 5u, 5u, 8u, 65u, 18u, 18u)
+
+                sensorParser.logging = false
                 sensorParser.parse(data1)
                 sensorParser.parse(data2)
                 sensorParser.parse(data3)
 
+
             }
         }
+        assert(count > 0) { "0 sensors returned" }
     }
 }
 

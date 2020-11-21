@@ -21,7 +21,7 @@
 package com.eziosoft.mqtt_test.data
 
 object RoombaSensors {
-    private var sensors = arrayListOf<RoombaSensor>()
+    private var sensors = hashMapOf<Int, RoombaSensor>()
 
     private fun add(
         packetID: Int,
@@ -31,10 +31,16 @@ object RoombaSensors {
         max: Int,
         unit: String = ""
     ) {
-        sensors.add(RoombaSensor(packetID, name, bytes, min, max, unit))
+        sensors.put(packetID, RoombaSensor(packetID, name, bytes, min, max, unit))
     }
 
-    fun getSensor(packetID: Int): RoombaSensor? = sensors.find { it.packetID == packetID }
+    fun getSensor(packetID: Int): RoombaSensor? {
+        return if (sensors.containsKey(packetID)) {
+            sensors[packetID]
+        } else {
+            null
+        }
+    }
 
 
     init {
