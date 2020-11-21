@@ -38,7 +38,7 @@ class ExampleUnitTest {
         var count = 0
         val sensorParser = SensorParser(object : SensorParser.SensorListener {
 
-            override fun onSensors(sensors: List<SensorParser.ParsedSensor>) {
+            override fun onSensors(sensors: ArrayList<SensorParser.ParsedSensor>) {
                 for (i in sensors.indices)
                     println("($i) ${sensors[i]}")
                 count = sensors.size
