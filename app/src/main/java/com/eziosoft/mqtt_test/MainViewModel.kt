@@ -23,12 +23,13 @@ package com.eziosoft.mqtt_test
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.eziosoft.mqtt_test.data.ParsedSensor
 import com.eziosoft.mqtt_test.data.SensorParser
 
 @ExperimentalUnsignedTypes
 class MainViewModel @ViewModelInject constructor() : ViewModel() {
 
-    val sensorDataSet = arrayListOf<SensorParser.ParsedSensor>()
+    val sensorDataSet = arrayListOf<ParsedSensor>()
 
     val dataSetChanged: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
 

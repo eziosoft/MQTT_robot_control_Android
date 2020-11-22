@@ -21,6 +21,7 @@
 package com.eziosoft.mqtt_test.data
 
 import javax.inject.Singleton
+import kotlin.system.measureTimeMillis
 
 
 enum class STATE {
@@ -40,34 +41,32 @@ class SensorParser(private val sensorListener: SensorListener) {
     var value = 0
     var packetID: UByte = 0u
 
+    var timer = 0L
+
+
     private val sensors = arrayListOf<ParsedSensor>()
 
     interface SensorListener {
-        fun onSensors(sensors: ArrayList<ParsedSensor>)
+        fun onSensors(sensors: List<ParsedSensor>)
         fun onChkSumError()
     }
 
-    data class ParsedSensor @ExperimentalUnsignedTypes constructor(
-        var sensorID: UByte = 0u,
-        var b1: UByte = 0u,
-        var b2: UByte = 0u,
-        var value: Int = 0,
-        var name: String? = RoombaSensors.getSensor(sensorID.toInt())?.name,
-        var units: String? = RoombaSensors.getSensor(sensorID.toInt())?.unit
-    ) {
 
-        fun toString1(): String = "$name=$value$units"
-
+    fun parse(bytes: UByteArray) {
+        val elapsed = measureTimeMillis {
+            _parse(bytes)
+        }
     }
 
+    private fun returnValues(sensors: List<ParsedSensor>) {
+        sensorListener.onSensors(sensors.toList())
+    }
 
     @ExperimentalUnsignedTypes
-    fun parse(bytes: UByteArray) {
+    fun _parse(bytes: UByteArray) {
         for (i in bytes.indices) {
             val b = bytes[i]
 
-            if (logging) print("$b " + state.name)
-            if (logging) println(" $n $packetID $b1 $b2 -> $ni")
             when (state) {
                 STATE.HEADER -> if (b == 19.toUByte()) {
                     chksum = 0u
@@ -89,6 +88,10 @@ class SensorParser(private val sensorListener: SensorListener) {
                 }
                 STATE.PACKET_ID -> {
                     packetID = b
+                    if (!RoombaSensors.isIdValid(packetID.toInt())) {
+                        state = STATE.HEADER //not valid packet id
+                        if (logging) println("---------->Not valid packet id")
+                    }
                     chksum = (chksum + b).toUByte()
                     ni++
                     if (ni > n.toInt()) state = STATE.HEADER
@@ -124,30 +127,37 @@ class SensorParser(private val sensorListener: SensorListener) {
                     sensors.add(ParsedSensor(packetID, b1, b2, value))
 
 
-                    if (n.toInt() == ni) {
+                    if (n.toInt() == ni) { //check check sum and return sensors
                         chksum = (chksum + b).toUByte()
                         if (chksum == 0.toUByte()) {//check sum correct
-                            if (logging) println("chksum OK")
-                            sensorListener.onSensors(sensors)
+                            if (logging) {
+                                println("chksum OK")
+                                println(sensors.toString())
+                            }
+                            returnValues(sensors)
                         } else {
                             if (logging) println("chksum FAILED")
                             sensorListener.onChkSumError()
                             state = STATE.HEADER
                         }
                         state = STATE.HEADER
-                    } else {
-                        if (logging) println("->next packet")
+                    } else { // next packet
+                        if (logging) println("->next sensor")
                         b1 = 0u
                         b2 = 0u
                         value = 0
                         packetID = b
                         chksum = (chksum + b).toUByte()
                         ni++
-                        if (ni > n.toInt()) state = STATE.HEADER
                         state = STATE.PACKET_DATA1
                     }
+
+                    if (n.toInt() < ni) state = STATE.HEADER
                 }
             }
+
+            if (logging) print("$b " + state.name)
+            if (logging) println(" n=$n id=$packetID b1=$b1 b2=$b2 ni=$ni")
         }
     }
 }

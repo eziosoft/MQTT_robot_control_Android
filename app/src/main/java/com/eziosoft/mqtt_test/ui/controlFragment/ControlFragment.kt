@@ -18,7 +18,7 @@
  *
  */
 
-package com.eziosoft.mqtt_test.ui
+package com.eziosoft.mqtt_test.ui.controlFragment
 
 import android.graphics.Color
 import android.os.Bundle
@@ -40,6 +40,7 @@ import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
+import com.eziosoft.mqtt_test.ui.ControlFragmentDirections
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

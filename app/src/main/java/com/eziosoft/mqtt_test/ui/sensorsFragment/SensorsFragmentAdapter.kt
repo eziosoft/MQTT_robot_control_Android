@@ -18,16 +18,16 @@
  *
  */
 
-package com.eziosoft.mqtt_test.ui
+package com.eziosoft.mqtt_test.ui.sensorsFragment
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.eziosoft.mqtt_test.data.SensorParser
+import com.eziosoft.mqtt_test.data.ParsedSensor
 import com.eziosoft.mqtt_test.databinding.RecycleViewItemBinding
 
 @ExperimentalUnsignedTypes
-class SensorsFragmentAdapter(private val dataSet: ArrayList<SensorParser.ParsedSensor>?) :
+class SensorsFragmentAdapter(private val dataSet: ArrayList<ParsedSensor>?) :
     RecyclerView.Adapter<SensorsFragmentAdapter.SensorsViewHolder>() {
 
     override fun onCreateViewHolder(
@@ -53,11 +53,11 @@ class SensorsFragmentAdapter(private val dataSet: ArrayList<SensorParser.ParsedS
     class SensorsViewHolder(private val binding: RecycleViewItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(currentItem: SensorParser.ParsedSensor) {
+        fun bind(currentItem: ParsedSensor) {
 
             binding.apply {
                 sensorName.text = currentItem.name
-                sensorValue.text = currentItem.value.toString()
+                sensorValue.text = currentItem.toStringValueWithUnits()
             }
         }
 

@@ -26,7 +26,7 @@
         app:startDestination="@id/controlFragment">
     <fragment
             android:id="@+id/controlFragment"
-            android:name="com.eziosoft.mqtt_test.ui.ControlFragment"
+            android:name="com.eziosoft.mqtt_test.ui.controlFragment.ControlFragment"
             android:label="Roomba Control" >
         <action
                 android:id="@+id/action_controlFragment_to_sensorsFragment"
@@ -34,7 +34,7 @@
     </fragment>
     <fragment
             android:id="@+id/sensorsFragment"
-            android:name="com.eziosoft.mqtt_test.ui.SensorsFragment"
+            android:name="com.eziosoft.mqtt_test.ui.sensorsFragment.SensorsFragment"
             android:label="Sensor List"
             tools:layout="@layout/sensors_fragment" />
 </navigation>
