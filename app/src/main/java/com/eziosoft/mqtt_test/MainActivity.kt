@@ -47,7 +47,7 @@ import kotlin.random.Random
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    val TESTING = false
+    val TESTING = true
     val mainViewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
 
@@ -110,8 +110,8 @@ class MainActivity : AppCompatActivity() {
         override fun onMessageArrived(topic: String?, message: MqttMessage?) {
             when (topic) {
                 MQTTtelemetryTopic -> {
-//                    mainViewModel.tvString.value =
-//                        message.toString() + " " + mainViewModel.voltage.value.toString()
+                    mainViewModel.tvString.value =
+                        message.toString()
                 }
                 MQTTcontrolTopic -> {
                     Log.d("aaa", "messageArrived: $topic :" + message.toString())
@@ -174,14 +174,13 @@ class MainActivity : AppCompatActivity() {
 
             mainViewModel.sensorDataSet.clear()
             mainViewModel.sensorDataSet.addAll(sensors)
-
-            var telemetry = ""
-            for (s in mainViewModel.sensorDataSet) {
-                telemetry += s.toString1() + "\n"
-            }
-
             mainViewModel.dataSetChanged.value = 0
-            mainViewModel.tvString.value = telemetry
+
+//            var telemetry = ""
+//            for (s in mainViewModel.sensorDataSet) {
+//                telemetry += s.toString1() + "\n"
+//            }
+//            mainViewModel.tvString.value = telemetry
         }
         timer++
     }
@@ -193,7 +192,10 @@ class MainActivity : AppCompatActivity() {
                 val data1: ArrayList<UByte> =
                     arrayListOf(
                         19u,
-                        8u,
+                        11u,
+                        23u,
+                        0u,
+                        Random.nextInt(200).toUByte(),
                         22u,
                         0u,
                         Random.nextInt(200).toUByte(),
@@ -212,7 +214,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (TESTING) test()
+        if (TESTING) {
+            mainViewModel.tvString.value="TEST"
+            test()
+        }
     }
 }
 

@@ -27,7 +27,7 @@ import com.eziosoft.mqtt_test.data.ParsedSensor
 import com.eziosoft.mqtt_test.databinding.RecycleViewItemBinding
 
 @ExperimentalUnsignedTypes
-class SensorsFragmentAdapter(private val dataSet: ArrayList<ParsedSensor>?) :
+class SensorsFragmentAdapter(private val dataSet: List<ParsedSensor>) :
     RecyclerView.Adapter<SensorsFragmentAdapter.SensorsViewHolder>() {
 
     override fun onCreateViewHolder(

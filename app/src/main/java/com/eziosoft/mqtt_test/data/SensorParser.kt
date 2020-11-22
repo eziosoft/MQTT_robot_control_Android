@@ -52,6 +52,7 @@ class SensorParser(private val sensorListener: SensorListener) {
     }
 
 
+
     fun parse(bytes: UByteArray) {
         val elapsed = measureTimeMillis {
             _parse(bytes)

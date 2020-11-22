@@ -83,5 +83,19 @@ class ExampleUnitTest {
         }
         assert(count > 0) { "0 sensors returned" }
     }
+
+
+
+
+    fun test(aaa: (i: Int, j:Int) -> Unit) {
+        aaa(5,10)
+    }
+    @Test
+    fun test2() {
+        test { i,j ->
+            val a = i
+            print("$a, $j")
+        }
+    }
 }
 
