@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~  This file is part of MQTT_robot_control_Android.
   ~
   ~     MQTT_robot_control_Android is free software: you can redistribute it and/or modify
@@ -24,8 +23,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.eziosoft.mqtt_test.ui.controlFragment.ControlFragment"
-        >
+        tools:context="com.eziosoft.mqtt_test.ui.controlFragment.ControlFragment">
 
     <TextView
             android:id="@+id/TV"
@@ -59,7 +57,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent" />
-
 
 
     <androidx.appcompat.widget.SwitchCompat
@@ -107,121 +104,103 @@
             app:layout_constraintStart_toEndOf="@+id/serverIP"
             app:layout_constraintTop_toTopOf="parent" />
 
-    <TableLayout
-            android:id="@+id/tableLayout"
+    <androidx.gridlayout.widget.GridLayout
+            android:id="@+id/gridLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            app:columnCount="4"
             app:layout_constraintBottom_toTopOf="@+id/joystickView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
-        <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-            <Button
-                    android:id="@+id/buttonStart"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Start" />
+        <Button
+                android:id="@+id/buttonStart"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start" />
 
-            <Button
-                    android:id="@+id/buttonStop"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Stop" />
+        <Button
+                android:id="@+id/buttonStop"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stop" />
 
-            <Button
-                    android:id="@+id/buttonUnDock"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Undock" />
+        <Button
+                android:id="@+id/buttonPowerOff"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Power off" />
 
-            <Button
-                    android:id="@+id/buttonDock"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dock" />
-        </TableRow>
+        <Button
+                android:id="@+id/buttonUnDock"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Undock" />
 
-        <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+        <Button
+                android:id="@+id/buttonDock"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dock" />
 
-            <Button
-                    android:id="@+id/buttonStartBrush"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="StartBrush" />
+        <Button
+                android:id="@+id/buttonStartBrush"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Brush on" />
 
-            <Button
-                    android:id="@+id/buttonStopBrush"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="StopBrush" />
+        <Button
+                android:id="@+id/buttonStopBrush"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Brush off" />
 
-            <Button
-                    android:id="@+id/buttonClean"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Clean" />
-
-            <Button
-                    android:id="@+id/buttonPowerOff"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Power off" />
-
-        </TableRow>
-
-        <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-            <Button
-                    android:id="@+id/buttonStartStream"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="start stream" />
-
-            <Button
-                    android:id="@+id/buttonPauseStream"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="pause stream" />
-
-            <Button
-                    android:id="@+id/buttonShowSensors"
-                    style="?android:attr/buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="show sensors" />
-        </TableRow>
+        <Button
+                android:id="@+id/buttonClean"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Clean" />
 
 
-        <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-    </TableLayout>
+        <Button
+                android:id="@+id/buttonStartStream"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="stream on" />
+
+        <Button
+                android:id="@+id/buttonPauseStream"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="stream off" />
+
+        <Button
+                android:id="@+id/buttonShowSensors"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="sensors" />
+    </androidx.gridlayout.widget.GridLayout>
 
     <WebView
             android:id="@+id/webView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/tableLayout"
+            app:layout_constraintBottom_toTopOf="@+id/gridLayout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/TV" />
+            app:layout_constraintTop_toBottomOf="@+id/TV"></WebView>
 
     <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switchVideo"

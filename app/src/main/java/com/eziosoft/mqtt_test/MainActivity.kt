@@ -47,9 +47,8 @@ import kotlin.random.Random
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
+    val TESTING = false
     val mainViewModel: MainViewModel by viewModels()
-
     private lateinit var navController: NavController
 
     @Inject
@@ -213,7 +212,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        test()
+        if (TESTING) test()
     }
 }
 

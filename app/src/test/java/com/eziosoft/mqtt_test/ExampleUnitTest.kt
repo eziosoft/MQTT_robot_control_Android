@@ -1,15 +1,14 @@
 package com.eziosoft.mqtt_test
 
-import android.util.Log
+import com.eziosoft.mqtt_test.data.ParsedSensor
 import com.eziosoft.mqtt_test.data.SensorParser
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Test
-
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Test
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -38,19 +37,19 @@ class ExampleUnitTest {
         var count = 0
         val sensorParser = SensorParser(object : SensorParser.SensorListener {
 
-            override fun onSensors(sensors: ArrayList<SensorParser.ParsedSensor>) {
+            override fun onSensors(sensors: List<ParsedSensor>) {
                 for (i in sensors.indices)
                     println("($i) ${sensors[i]}")
                 count = sensors.size
 
-                val testSensor0 = SensorParser.ParsedSensor(
+                val testSensor0 = ParsedSensor(
                     sensorID = 29u,
                     b1 = 2u,
                     b2 = 25u,
                     value = 537,
                     name = "Cliff Front Left Signal"
                 )
-                val testSensor1 = SensorParser.ParsedSensor(
+                val testSensor1 = ParsedSensor(
                     sensorID = 13u,
                     b1 = 0u,
                     b2 = 0u,

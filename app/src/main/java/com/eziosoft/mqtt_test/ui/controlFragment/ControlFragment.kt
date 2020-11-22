@@ -40,7 +40,6 @@ import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
-import com.eziosoft.mqtt_test.ui.ControlFragmentDirections
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -113,23 +112,22 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
 
         //Add this.onClickListener to buttons in tableLayout
-        for (i in 0 until binding.tableLayout.childCount) {
-            val row = binding.tableLayout.getChildAt(i) as TableRow
-            for (j in 0 until row.childCount) {
-                val button = row.getChildAt(j)
-                if (button is Button) button.setOnClickListener(this)
-            }
+        for (i in 0 until binding.gridLayout.childCount) {
+            val button = binding.gridLayout.getChildAt(i)
+            if (button is Button) button.setOnClickListener(this)
         }
 
 
-        mainViewModel.tvString.observe(viewLifecycleOwner) { s ->
+
+        mainViewModel.tvString.observe(viewLifecycleOwner)
+        { s ->
             binding.TV.text = s
         }
 
-        mainViewModel.serverAddress.observe(viewLifecycleOwner) { ip ->
+        mainViewModel.serverAddress.observe(viewLifecycleOwner)
+        { ip ->
             binding.serverIP.setText(ip)
         }
-
 
 
         val joyObserver = Observer<Float> {
@@ -142,7 +140,8 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         mainViewModel.joyY.observe(viewLifecycleOwner, joyObserver)
 
 
-        mainViewModel.connectionStatus.observe(viewLifecycleOwner) { connected ->
+        mainViewModel.connectionStatus.observe(viewLifecycleOwner)
+        { connected ->
             if (connected) {
                 binding.serverIP.isVisible = false
                 binding.connectButton.isVisible = false
