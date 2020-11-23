@@ -39,15 +39,15 @@ class SensorParser(private val sensorListener: SensorListener) {
     var b1: UByte = 0u
     var b2: UByte = 0u
     var value = 0
-    var packetID: UByte = 0u
+    var packetID: Int = 0
 
     var timer = 0L
 
 
-    private val sensors = arrayListOf<ParsedSensor>()
+    private val sensors = arrayListOf<RoombaParsedSensor>()
 
     interface SensorListener {
-        fun onSensors(sensors: List<ParsedSensor>)
+        fun onSensors(sensors: List<RoombaParsedSensor>)
         fun onChkSumError()
     }
 
@@ -59,7 +59,7 @@ class SensorParser(private val sensorListener: SensorListener) {
         }
     }
 
-    private fun returnValues(sensors: List<ParsedSensor>) {
+    private fun returnValues(sensors: List<RoombaParsedSensor>) {
         sensorListener.onSensors(sensors.toList())
     }
 
@@ -77,7 +77,7 @@ class SensorParser(private val sensorListener: SensorListener) {
                     b1 = 0u
                     b2 = 0u
                     value = 0
-                    packetID = 0u
+                    packetID = 0
                     chksum = (chksum + b).toUByte()
                     sensors.clear()
                     state = STATE.N
@@ -88,8 +88,8 @@ class SensorParser(private val sensorListener: SensorListener) {
                     state = STATE.PACKET_ID
                 }
                 STATE.PACKET_ID -> {
-                    packetID = b
-                    if (!RoombaSensors.isIdValid(packetID.toInt())) {
+                    packetID = b.toInt()
+                    if (!RoombaAvailableSensors.isIdValid(packetID.toInt())) {
                         state = STATE.HEADER //not valid packet id
                         if (logging) println("---------->Not valid packet id")
                     }
@@ -105,7 +105,7 @@ class SensorParser(private val sensorListener: SensorListener) {
                     if (ni > n.toInt()) state = STATE.HEADER
 //                    if(logging)println("$n == $ni")
 
-                    when (RoombaSensors.getSensor(packetID.toInt())?.bytesCount) {
+                    when (RoombaAvailableSensors.getSensor(packetID.toInt())?.bytesCount) {
                         1 -> state = STATE.CHKSUM_OR_NEXT_SENSOR
                         2 -> state = STATE.PACKET_DATA2
                     }
@@ -120,12 +120,12 @@ class SensorParser(private val sensorListener: SensorListener) {
                 }
 
                 STATE.CHKSUM_OR_NEXT_SENSOR -> {
-                    if (RoombaSensors.getSensor(packetID.toInt())?.bytesCount == 2) {
+                    if (RoombaAvailableSensors.getSensor(packetID.toInt())?.bytesCount == 2) {
                         value = (b1.toInt() * 256 + b2.toInt()).toInt()
                     } else {
                         value = b1.toInt()
                     }
-                    sensors.add(ParsedSensor(packetID, b1, b2, value))
+                    sensors.add(RoombaParsedSensor(packetID, b1, b2, value))
 
 
                     if (n.toInt() == ni) { //check check sum and return sensors
@@ -147,7 +147,7 @@ class SensorParser(private val sensorListener: SensorListener) {
                         b1 = 0u
                         b2 = 0u
                         value = 0
-                        packetID = b
+                        packetID = b.toInt()
                         chksum = (chksum + b).toUByte()
                         ni++
                         state = STATE.PACKET_DATA1

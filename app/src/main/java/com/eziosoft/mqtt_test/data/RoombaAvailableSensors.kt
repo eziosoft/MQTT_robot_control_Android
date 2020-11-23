@@ -20,7 +20,7 @@
 
 package com.eziosoft.mqtt_test.data
 
-object RoombaSensors {
+object RoombaAvailableSensors {
     private var sensors = hashMapOf<Int, RoombaSensor>()
 
 
@@ -59,11 +59,11 @@ object RoombaSensors {
         add(16, "Unused 1", 1, 0, 255)
         add(17, "Ir Opcode", 1, 0, 255)
         add(18, "Buttons", 1, 0, 255)
-        add(19, "Distance", 2, 32768, 32767, "mm")
-        add(20, "Angle", 2, 32768, 32767, "degrees")
+        add(19, "Distance", 2, -32768, 32767, "mm")
+        add(20, "Angle", 2, -32768, 32767, "degrees")
         add(21, "Charging State", 1, 0, 6)
         add(22, "Voltage", 2, 0, 65535, "mV")
-        add(23, "Current", 2, 32768, 32767, "mA")
+        add(23, "Current", 2, -32768, 32767, "mA")
         add(24, "Temperature", 1, -128, 127, "deg C")
         add(25, "Battery Charge", 2, 0, 65535, "mAh")
         add(26, "Battery Capacity", 2, 0, 65535, "mAh")

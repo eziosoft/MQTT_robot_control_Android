@@ -23,11 +23,11 @@ package com.eziosoft.mqtt_test.ui.sensorsFragment
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.eziosoft.mqtt_test.data.ParsedSensor
+import com.eziosoft.mqtt_test.data.RoombaParsedSensor
 import com.eziosoft.mqtt_test.databinding.RecycleViewItemBinding
 
 @ExperimentalUnsignedTypes
-class SensorsFragmentAdapter(private val dataSet: List<ParsedSensor>) :
+class SensorsFragmentAdapter(private val dataSet: List<RoombaParsedSensor>) :
     RecyclerView.Adapter<SensorsFragmentAdapter.SensorsViewHolder>() {
 
     override fun onCreateViewHolder(
@@ -53,7 +53,7 @@ class SensorsFragmentAdapter(private val dataSet: List<ParsedSensor>) :
     class SensorsViewHolder(private val binding: RecycleViewItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(currentItem: ParsedSensor) {
+        fun bind(currentItem: RoombaParsedSensor) {
 
             binding.apply {
                 sensorName.text = currentItem.name

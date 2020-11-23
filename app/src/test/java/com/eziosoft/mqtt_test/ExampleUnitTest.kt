@@ -1,7 +1,8 @@
 package com.eziosoft.mqtt_test
 
-import com.eziosoft.mqtt_test.data.ParsedSensor
+import com.eziosoft.mqtt_test.data.RoombaParsedSensor
 import com.eziosoft.mqtt_test.data.SensorParser
+import com.eziosoft.mqtt_test.helpers.to16UByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -37,23 +38,23 @@ class ExampleUnitTest {
         var count = 0
         val sensorParser = SensorParser(object : SensorParser.SensorListener {
 
-            override fun onSensors(sensors: List<ParsedSensor>) {
+            override fun onSensors(sensors: List<RoombaParsedSensor>) {
                 for (i in sensors.indices)
                     println("($i) ${sensors[i]}")
                 count = sensors.size
 
-                val testSensor0 = ParsedSensor(
-                    sensorID = 29u,
+                val testSensor0 = RoombaParsedSensor(
+                    sensorID = 29,
                     b1 = 2u,
                     b2 = 25u,
-                    value = 537,
+                    unsignedValue = 537,
                     name = "Cliff Front Left Signal"
                 )
-                val testSensor1 = ParsedSensor(
-                    sensorID = 13u,
+                val testSensor1 = RoombaParsedSensor(
+                    sensorID = 13,
                     b1 = 0u,
                     b2 = 0u,
-                    value = 0,
+                    unsignedValue = 0,
                     name = "Virtual Wall"
                 )
                 assertEquals("object are not identical", sensors[0], testSensor0)
@@ -85,14 +86,57 @@ class ExampleUnitTest {
     }
 
 
+    @ExperimentalUnsignedTypes
+    @Test
+    fun parserTestSignedValues() {
+        val sensorParser = SensorParser(object : SensorParser.SensorListener {
+            override fun onSensors(sensors: List<RoombaParsedSensor>) {
+                for (s in sensors) {
+                    println(s.toString())
+                }
+                assertEquals(sensors[0],RoombaParsedSensor(sensorID=23, b1=255u, b2=156u, unsignedValue=65436, name="Current", units="mA"))
+                assertEquals(sensors[1],RoombaParsedSensor(sensorID=22, b1=0u, b2=30u, unsignedValue=30, name="Voltage", units="mV"))
+                assertEquals(sensors[2],RoombaParsedSensor(sensorID=29, b1=2u, b2=15u, unsignedValue=527, name="Cliff Front Left Signal"))
+                assertEquals(sensors[3],RoombaParsedSensor(sensorID=13, b1=1u, b2=0u, unsignedValue=1, name="Virtual Wall"))
+                assertEquals(sensors[0].signedValue,-100)
+            }
 
+            override fun onChkSumError() {
+                TODO("Not yet implemented")
+            }
+        })
 
-    fun test(aaa: (i: Int, j:Int) -> Unit) {
-        aaa(5,10)
+        val v: UByteArray = (-100).to16UByteArray()
+
+        val data1: ArrayList<UByte> =
+            arrayListOf(
+                19u,
+                11u,
+                23u,
+                v[0],
+                v[1],
+                22u,
+                0u,
+                30u,
+                29u,
+                2u,
+                15u,
+                13u,
+                1u
+            )
+        val checksum = 256u - data1.sum()
+        data1.add((checksum.toUByte()))
+        sensorParser.parse(data1.toUByteArray())
     }
+
+
+    fun test(aaa: (i: Int, j: Int) -> Unit) {
+        aaa(5, 10)
+    }
+
     @Test
     fun test2() {
-        test { i,j ->
+        test { i, j ->
             val a = i
             print("$a, $j")
         }

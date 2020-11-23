@@ -27,7 +27,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
- fun byteToInt(bytes: ByteArray): Int {
+@ExperimentalUnsignedTypes
+fun Int.to16UByteArray(): UByteArray {
+    val bytes = UByteArray(2)
+    bytes[1] = (this and 0xFFFF).toUByte()
+    bytes[0] = ((this ushr 8) and 0xFFFF).toUByte()
+    return bytes
+}
+
+fun byteToInt(bytes: ByteArray): Int {
     var result = 0
     var shift = 0
     for (byte in bytes) {
@@ -67,17 +75,10 @@ fun map(x: Int, in_min: Int, in_max: Int, out_min: Int, out_max: Int): Int {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 }
 
-@Suppress("DEPRECATION")
-fun fromHtml(html: String): Spanned {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT)
-    } else {
-        Html.fromHtml(html)
-    }
-}
 
 
-fun getFormattedTime(milliSeconds: Long, dateFormat: String = "dd/MM/yyyy hh:mm:ss.SSS"): String {
+
+fun Date.getFormattedTime(milliSeconds: Long, dateFormat: String = "dd/MM/yyyy hh:mm:ss.SSS"): String {
     // Create a DateFormatter object for displaying date in specified format.
     val formatter = SimpleDateFormat(dateFormat, Locale.getDefault())
 

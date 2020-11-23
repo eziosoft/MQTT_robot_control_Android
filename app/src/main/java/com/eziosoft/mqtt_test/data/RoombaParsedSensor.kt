@@ -20,16 +20,17 @@
 
 package com.eziosoft.mqtt_test.data
 
-data class ParsedSensor @ExperimentalUnsignedTypes constructor(
-    var sensorID: UByte = 0u,
-    var b1: UByte = 0u,
-    var b2: UByte = 0u,
-    var value: Int = 0,
-    var name: String? = RoombaSensors.getSensor(sensorID.toInt())?.name,
-    var units: String? = RoombaSensors.getSensor(sensorID.toInt())?.unit
+data class RoombaParsedSensor @ExperimentalUnsignedTypes constructor(
+    val sensorID: Int = 0,
+    val b1: UByte = 0u,
+    val b2: UByte = 0u,
+    val unsignedValue: Int = 0,
+    val name: String? = RoombaAvailableSensors.getSensor(sensorID.toInt())?.name,
+    val units: String? = RoombaAvailableSensors.getSensor(sensorID.toInt())?.unit
 ) {
+    val signedValue: Int get() = if (RoombaAvailableSensors.getSensor(sensorID)!!.min < 0) unsignedValue.toShort().toInt() else unsignedValue
 
-    fun toString1(): String = "$name=$value$units"
-    fun toStringValueWithUnits(): String = "$value$units"
+    fun toString1(): String = "$name=$signedValue$units"
+    fun toStringValueWithUnits(): String = "$signedValue$units"
 
 }

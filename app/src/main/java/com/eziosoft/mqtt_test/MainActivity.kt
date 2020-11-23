@@ -35,8 +35,9 @@ import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTStreamTopic
 import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTtelemetryTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
-import com.eziosoft.mqtt_test.data.ParsedSensor
+import com.eziosoft.mqtt_test.data.RoombaParsedSensor
 import com.eziosoft.mqtt_test.data.SensorParser
+import com.eziosoft.mqtt_test.helpers.to16UByteArray
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         sensorParser = SensorParser(object : SensorParser.SensorListener {
-            override fun onSensors(sensors: List<ParsedSensor>) {
+            override fun onSensors(sensors: List<RoombaParsedSensor>) {
                 processParsedSensors(sensors)
             }
 
@@ -168,19 +169,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     var timer = 0L
-    fun processParsedSensors(sensors: List<ParsedSensor>) {
+    fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
         if (timer < System.currentTimeMillis()) {
             timer = System.currentTimeMillis() + 100
 
             mainViewModel.sensorDataSet.clear()
             mainViewModel.sensorDataSet.addAll(sensors)
             mainViewModel.dataSetChanged.value = 0
-
-//            var telemetry = ""
-//            for (s in mainViewModel.sensorDataSet) {
-//                telemetry += s.toString1() + "\n"
-//            }
-//            mainViewModel.tvString.value = telemetry
         }
         timer++
     }
@@ -189,13 +184,15 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.Main) {
             while (true) {
                 delay(15)
+                val v: UByteArray = (Random.nextInt(-2000, 2000)).to16UByteArray()
+
                 val data1: ArrayList<UByte> =
                     arrayListOf(
                         19u,
                         11u,
                         23u,
-                        0u,
-                        Random.nextInt(200).toUByte(),
+                        v[0],
+                        v[1],
                         22u,
                         0u,
                         Random.nextInt(200).toUByte(),
@@ -215,7 +212,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if (TESTING) {
-            mainViewModel.tvString.value="TEST"
+            mainViewModel.tvString.value = "TEST"
             test()
         }
     }
