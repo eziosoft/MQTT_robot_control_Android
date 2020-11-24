@@ -48,7 +48,7 @@ import kotlin.random.Random
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    val TESTING = true
+    val TESTING = false
     val mainViewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
 
@@ -189,7 +189,31 @@ class MainActivity : AppCompatActivity() {
                 val data1: ArrayList<UByte> =
                     arrayListOf(
                         19u,
-                        11u,
+                        35u,
+                        46u,
+                        10u,
+                        Random.nextInt(255).toUByte(),
+                        47u,
+                        10u,
+                        Random.nextInt(255).toUByte(),
+                        48u,
+                        10u,
+                        Random.nextInt(255).toUByte(),
+                        49u,
+                        10u,
+                        Random.nextInt(255).toUByte(),
+                        50u,
+                        10u,
+                        Random.nextInt(255).toUByte(),
+                        51u,
+                        10u,
+                        Random.nextInt(255).toUByte(),
+                        26u,
+                        100u,
+                        0u,
+                        25u,
+                        80u,
+                        Random.nextInt(255).toUByte(),
                         23u,
                         v[0],
                         v[1],

@@ -32,8 +32,9 @@ object RoombaAvailableSensors {
         max: Int,
         unit: String = ""
     ) {
-        sensors.put(packetID, RoombaSensor(packetID, name, bytes, min, max, unit))
+        sensors[packetID] = RoombaSensor(packetID, name, bytes, min, max, unit)
     }
+
 
     fun getSensor(packetID: Int): RoombaSensor? {
         return if (sensors.containsKey(packetID)) {
@@ -45,6 +46,27 @@ object RoombaAvailableSensors {
 
     fun isIdValid(packetID: Int) = sensors.containsKey(packetID)
 
+    fun getChargingStateString(code: Int): String {
+        return when (code) {
+            0 -> "Not charging"
+            1 -> "Reconditioning Charging"
+            2 -> "Full Charging"
+            3 -> "Trickle Charging"
+            4 -> "Waiting"
+            5 -> "Charging Fault Condition"
+            else -> "Unknown"
+        }
+    }
+
+    fun getIOModeString(code: Int): String {
+        return when (code) {
+            0 -> "Off"
+            1 -> "Passive"
+            2 -> "Safe"
+            3 -> "Full"
+            else -> ""
+        }
+    }
 
     init {
         add(7, "Bumps Wheeldrops", 1, 0, 15)
@@ -61,7 +83,7 @@ object RoombaAvailableSensors {
         add(18, "Buttons", 1, 0, 255)
         add(19, "Distance", 2, -32768, 32767, "mm")
         add(20, "Angle", 2, -32768, 32767, "degrees")
-        add(21, "Charging State", 1, 0, 6)
+        add(21, "Charging State", 1, 0, 6, "")
         add(22, "Voltage", 2, 0, 65535, "mV")
         add(23, "Current", 2, -32768, 32767, "mA")
         add(24, "Temperature", 1, -128, 127, "deg C")
@@ -79,7 +101,7 @@ object RoombaAvailableSensors {
         add(36, "Song Number", 1, 0, 4)
         add(37, "Song Playing?", 1, 0, 1)
         add(38, "Oi Stream Num Packets", 1, 0, 108)
-        add(39, "Velocity", 2, 500, 500, "mm/s")
+        add(39, "Velocity", 2, -500, 500, "mm/s")
         add(40, "Radius", 2, -32768, 32767, "mm")
         add(41, "Velocity Right", 2, -500, 500, "mm/s")
         add(42, "Velocity Left", 2, -500, 500, "mm/s")

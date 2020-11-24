@@ -27,7 +27,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.TableRow
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -39,6 +38,7 @@ import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
+import com.eziosoft.mqtt_test.data.RoombaAvailableSensors
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
@@ -86,15 +86,15 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                 handleJoystick(angle, strength)
             }
         }
-
-        binding.switchVideo.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                binding.switchVideo.isVisible = false
-                binding.webView.settings.loadWithOverviewMode = true;
-                binding.webView.settings.useWideViewPort = true;
-                binding.webView.loadUrl("http://192.168.0.56:8080/browserfs.html")
-            }
-        }
+//
+//        binding.switchVideo.setOnCheckedChangeListener { _, isChecked ->
+//            if (isChecked) {
+//                binding.switchVideo.isVisible = false
+//                binding.webView.settings.loadWithOverviewMode = true;
+//                binding.webView.settings.useWideViewPort = true;
+//                binding.webView.loadUrl("http://192.168.0.56:8080/browserfs.html")
+//            }
+//        }
 
         binding.watchSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -150,6 +150,32 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                 binding.serverIP.isVisible = true
                 binding.connectButton.isVisible = true
             }
+
+        }
+
+        binding.apply {
+            val max = RoombaAvailableSensors.getSensor(46)!!.max
+            progressBarIr1.max = max
+            progressBarIr2.max = max
+            progressBarIr3.max = max
+            progressBarIr4.max = max
+            progressBarIr5.max = max
+            progressBarIr6.max = max
+
+        }
+
+
+        mainViewModel.dataSetChanged.observe(viewLifecycleOwner)
+        {
+            binding.progressBarBattery.max = mainViewModel.getSensorValue(26) ?: 0
+            binding.progressBarBattery.progress = mainViewModel.getSensorValue(25) ?: 0
+            binding.progressBarIr1.progress = mainViewModel.getSensorValue(46) ?: 0
+            binding.progressBarIr2.progress = mainViewModel.getSensorValue(47) ?: 0
+            binding.progressBarIr3.progress = mainViewModel.getSensorValue(48) ?: 0
+            binding.progressBarIr4.progress = mainViewModel.getSensorValue(49) ?: 0
+            binding.progressBarIr5.progress = mainViewModel.getSensorValue(50) ?: 0
+            binding.progressBarIr6.progress = mainViewModel.getSensorValue(51) ?: 0
+
 
         }
 

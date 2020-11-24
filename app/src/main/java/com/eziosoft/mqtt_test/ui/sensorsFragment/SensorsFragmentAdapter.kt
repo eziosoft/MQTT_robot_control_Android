@@ -56,7 +56,7 @@ class SensorsFragmentAdapter(private val dataSet: List<RoombaParsedSensor>) :
         fun bind(currentItem: RoombaParsedSensor) {
 
             binding.apply {
-                sensorName.text = currentItem.name
+                sensorName.text = currentItem.getNameAndSensorID()
                 sensorValue.text = currentItem.toStringValueWithUnits()
             }
         }

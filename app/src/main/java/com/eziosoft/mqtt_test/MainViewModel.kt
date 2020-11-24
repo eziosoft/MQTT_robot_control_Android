@@ -30,6 +30,11 @@ class MainViewModel @ViewModelInject constructor() : ViewModel() {
 
     val sensorDataSet = arrayListOf<RoombaParsedSensor>()
 
+    fun getSensorValue(id: Int): Int? {
+        return sensorDataSet.find { it.sensorID == id }?.signedValue
+    }
+
+
     val dataSetChanged: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
 
     val tvString: MutableLiveData<String> by lazy {
