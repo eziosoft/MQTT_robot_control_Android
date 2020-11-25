@@ -48,7 +48,7 @@ class SensorsFragmentAdapter(private val dataSet: List<RoombaParsedSensor>) :
         }
     }
 
-    override fun getItemCount(): Int = dataSet!!.size
+    override fun getItemCount(): Int = dataSet.size
 
     class SensorsViewHolder(private val binding: RecycleViewItemBinding) :
         RecyclerView.ViewHolder(binding.root) {

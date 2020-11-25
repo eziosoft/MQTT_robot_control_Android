@@ -52,6 +52,4 @@ class MainViewModel @ViewModelInject constructor() : ViewModel() {
     var t: Long = 0
 
     val connectionStatus: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
-
-    val voltage: MutableLiveData<Float> by lazy { MutableLiveData<Float>() }
 }

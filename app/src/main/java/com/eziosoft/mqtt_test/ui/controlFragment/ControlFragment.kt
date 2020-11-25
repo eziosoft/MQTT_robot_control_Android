@@ -161,7 +161,6 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             progressBarIr4.max = max
             progressBarIr5.max = max
             progressBarIr6.max = max
-
         }
 
 

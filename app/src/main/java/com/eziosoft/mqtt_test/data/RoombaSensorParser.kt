@@ -52,11 +52,11 @@ class SensorParser(private val sensorListener: SensorListener) {
     }
 
 
-
     fun parse(bytes: UByteArray) {
         val elapsed = measureTimeMillis {
             _parse(bytes)
         }
+        if(logging) println("---------------------------------->$elapsed")
     }
 
     private fun returnValues(sensors: List<RoombaParsedSensor>) {

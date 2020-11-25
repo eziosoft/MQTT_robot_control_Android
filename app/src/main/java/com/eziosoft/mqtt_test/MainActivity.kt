@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
     var timer = 0L
     fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
         if (timer < System.currentTimeMillis()) {
-            timer = System.currentTimeMillis() + 100
+            timer = System.currentTimeMillis() + 250
 
             mainViewModel.sensorDataSet.clear()
             mainViewModel.sensorDataSet.addAll(sensors)
