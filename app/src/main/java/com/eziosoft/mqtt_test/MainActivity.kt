@@ -48,7 +48,7 @@ import kotlin.random.Random
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    val TESTING = false
+    val TESTING = true
     val mainViewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
 
@@ -71,13 +71,13 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         sensorParser = SensorParser(object : SensorParser.SensorListener {
-            override fun onSensors(sensors: List<RoombaParsedSensor>) {
-                processParsedSensors(sensors)
+            override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
+                if (checksumOK) processParsedSensors(sensors)
+                else
+                    Log.e("aaa", "CHECKSUM ERROR")
             }
 
-            override fun onChkSumError() {
-                Log.e("aaa", "check sum error")
-            }
+
         })
         mqtt = mqttRepository.mqtt
         mqtt.setListener(mqttListener)

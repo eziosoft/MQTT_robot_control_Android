@@ -20,6 +20,7 @@
 
 package com.eziosoft.mqtt_test.data
 
+import kotlinx.coroutines.*
 import javax.inject.Singleton
 import kotlin.system.measureTimeMillis
 
@@ -41,30 +42,31 @@ class SensorParser(private val sensorListener: SensorListener) {
     var value = 0
     var packetID: Int = 0
 
-    var timer = 0L
+    var isParsing = false
 
 
     private val sensors = arrayListOf<RoombaParsedSensor>()
 
     interface SensorListener {
-        fun onSensors(sensors: List<RoombaParsedSensor>)
-        fun onChkSumError()
+        fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean)
+
     }
 
 
     fun parse(bytes: UByteArray) {
         val elapsed = measureTimeMillis {
-            _parse(bytes)
+            GlobalScope.launch(Dispatchers.IO) {
+                _parse(bytes)
+            }
         }
-        if(logging) println("---------------------------------->$elapsed")
+        if (logging) println("---------------------------------->$elapsed")
+
     }
 
-    private fun returnValues(sensors: List<RoombaParsedSensor>) {
-        sensorListener.onSensors(sensors.toList())
-    }
 
     @ExperimentalUnsignedTypes
-    fun _parse(bytes: UByteArray) {
+    suspend fun _parse(bytes: UByteArray) {
+        isParsing = true
         for (i in bytes.indices) {
             val b = bytes[i]
 
@@ -135,10 +137,14 @@ class SensorParser(private val sensorListener: SensorListener) {
                                 println("chksum OK")
                                 println(sensors.toString())
                             }
-                            returnValues(sensors)
+                            withContext(Dispatchers.Main) {
+                                sensorListener.onSensors(sensors.toList(), true)
+                            }
                         } else {
                             if (logging) println("chksum FAILED")
-                            sensorListener.onChkSumError()
+                            withContext(Dispatchers.Main) {
+                                sensorListener.onSensors(sensors.toList(), false)
+                            }
                             state = STATE.HEADER
                         }
                         state = STATE.HEADER
@@ -160,5 +166,6 @@ class SensorParser(private val sensorListener: SensorListener) {
             if (logging) print("$b " + state.name)
             if (logging) println(" n=$n id=$packetID b1=$b1 b2=$b2 ni=$ni")
         }
+        isParsing = false
     }
 }

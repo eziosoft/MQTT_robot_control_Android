@@ -45,6 +45,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
@@ -174,8 +176,6 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             binding.progressBarIr4.progress = mainViewModel.getSensorValue(49) ?: 0
             binding.progressBarIr5.progress = mainViewModel.getSensorValue(50) ?: 0
             binding.progressBarIr6.progress = mainViewModel.getSensorValue(51) ?: 0
-
-
         }
 
     }
