@@ -22,13 +22,15 @@ package com.eziosoft.mqtt_test.ui.sensorsFragment
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.eziosoft.mqtt_test.data.RoombaParsedSensor
 import com.eziosoft.mqtt_test.databinding.RecycleViewItemBinding
 
 @ExperimentalUnsignedTypes
-class SensorsFragmentAdapter(private val dataSet: List<RoombaParsedSensor>) :
-    RecyclerView.Adapter<SensorsFragmentAdapter.SensorsViewHolder>() {
+class SensorsFragmentAdapter() :
+    ListAdapter<RoombaParsedSensor, SensorsFragmentAdapter.SensorsViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -41,14 +43,13 @@ class SensorsFragmentAdapter(private val dataSet: List<RoombaParsedSensor>) :
     }
 
     override fun onBindViewHolder(holder: SensorsViewHolder, position: Int) {
-        val currentItem = dataSet!![position]
+        val currentItem = getItem(position)
 
         if (currentItem != null) {
             holder.bind(currentItem)
         }
     }
 
-    override fun getItemCount(): Int = dataSet.size
 
     class SensorsViewHolder(private val binding: RecycleViewItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -60,8 +61,23 @@ class SensorsFragmentAdapter(private val dataSet: List<RoombaParsedSensor>) :
                 sensorValue.text = currentItem.toStringValueWithUnits()
             }
         }
-
     }
 
+
+    class DiffCallback : DiffUtil.ItemCallback<RoombaParsedSensor>() {
+        override fun areItemsTheSame(
+            oldItem: RoombaParsedSensor,
+            newItem: RoombaParsedSensor
+        ): Boolean {
+            return oldItem.sensorID == newItem.sensorID
+        }
+
+        override fun areContentsTheSame(
+            oldItem: RoombaParsedSensor,
+            newItem: RoombaParsedSensor
+        ): Boolean {
+            return oldItem == newItem
+        }
+    }
 
 }

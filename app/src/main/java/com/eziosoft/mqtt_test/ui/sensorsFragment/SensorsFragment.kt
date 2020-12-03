@@ -43,16 +43,17 @@ class SensorsFragment : Fragment(R.layout.sensors_fragment) {
 
         _binding = SensorsFragmentBinding.bind(view)
 
-        val adapter = SensorsFragmentAdapter(mainViewModel.sensorDataSet)
+        val adapter = SensorsFragmentAdapter()
 
         binding.apply {
             recyclerView.setHasFixedSize(true)
-            recyclerView.itemAnimator = null
+//            recyclerView.itemAnimator = null
             recyclerView.adapter = adapter
         }
 
         mainViewModel.dataSetChanged.observe(viewLifecycleOwner)
         {
+            adapter.submitList(mainViewModel.sensorDataSet)
             adapter.notifyDataSetChanged()
         }
     }

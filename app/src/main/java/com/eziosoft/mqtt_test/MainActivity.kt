@@ -175,6 +175,7 @@ class MainActivity : AppCompatActivity() {
 
             mainViewModel.sensorDataSet.clear()
             mainViewModel.sensorDataSet.addAll(sensors)
+
             mainViewModel.dataSetChanged.value = 0
         }
         timer++
