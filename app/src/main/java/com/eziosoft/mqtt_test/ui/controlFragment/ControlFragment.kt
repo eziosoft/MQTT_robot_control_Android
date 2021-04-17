@@ -31,6 +31,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainActivity
@@ -42,6 +43,8 @@ import com.eziosoft.mqtt_test.data.RoombaAvailableSensors
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.cos
 import kotlin.math.sin
@@ -58,6 +61,8 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
     @Inject
     lateinit var mqttRepository: MqttRepository
     private val mainViewModel by activityViewModels<MainViewModel>()
+
+    private var bumpers = 0
 
 
     override fun onCreateView(
@@ -85,7 +90,25 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             isSquareBehaviour = true
 
             setOnMoveListener { angle, strength ->
-                handleJoystick(angle, strength)
+                lifecycleScope.launch {
+                    if (binding.avoidSwitch.isChecked) {
+                        //left
+                        if (bumpers == 2 || bumpers == 3) {
+                            handleJoystick(270, 100)
+                            delay(200)
+                            handleJoystick(0, 100)
+                            delay(300)
+                        }
+                        //right
+                        if (bumpers == 1 || bumpers == 3) {
+                            handleJoystick(270, 100)
+                            delay(200)
+                            handleJoystick(180, 100)
+                            delay(300)
+                        }
+                    }
+                    handleJoystick(angle, strength)
+                }
             }
         }
 //
@@ -155,27 +178,23 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         }
 
-        binding.apply {
-            val max = RoombaAvailableSensors.getSensor(46)!!.max
-            progressBarIr1.max = max
-            progressBarIr2.max = max
-            progressBarIr3.max = max
-            progressBarIr4.max = max
-            progressBarIr5.max = max
-            progressBarIr6.max = max
-        }
+
 
 
         mainViewModel.dataSetChanged.observe(viewLifecycleOwner)
         {
             binding.progressBarBattery.max = mainViewModel.getSensorValue(26) ?: 0
             binding.progressBarBattery.progress = mainViewModel.getSensorValue(25) ?: 0
-            binding.progressBarIr1.progress = mainViewModel.getSensorValue(46) ?: 0
-            binding.progressBarIr2.progress = mainViewModel.getSensorValue(47) ?: 0
-            binding.progressBarIr3.progress = mainViewModel.getSensorValue(48) ?: 0
-            binding.progressBarIr4.progress = mainViewModel.getSensorValue(49) ?: 0
-            binding.progressBarIr5.progress = mainViewModel.getSensorValue(50) ?: 0
-            binding.progressBarIr6.progress = mainViewModel.getSensorValue(51) ?: 0
+
+            mainViewModel.getSensorValue(7)?.let {
+                bumpers = it
+
+                binding.viewLeft.visibility =
+                    if (bumpers == 2 || bumpers == 3) View.VISIBLE else View.INVISIBLE
+                binding.viewRight.visibility =
+                    if (bumpers == 1 || bumpers == 3) View.VISIBLE else View.INVISIBLE
+
+            }
         }
 
     }
@@ -200,19 +219,27 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
     }
 
 
-    private fun handleJoystick(angle: Int, strength: Int) {
+    fun handleJoystick(angle: Int, strength: Int) {
+        Log.d("aaa", "handleJoystick: angle=$angle  strength=$strength")
+
         var x = cos(Math.toRadians(angle.toDouble())) * strength / 100f
         var y = sin(Math.toRadians(angle.toDouble())) * strength / 100f
+
 
         var ch1 = 0
         var ch2 = 0
         val ch3 = 0
         val ch4 = 0
 
+
+
+
         if (binding.precisionSwich.isChecked) {
             x /= 4f
             y /= 4f
         }
+
+
 
         ch1 = (-x * 100).toInt()
         ch2 = (y * 100).toInt()

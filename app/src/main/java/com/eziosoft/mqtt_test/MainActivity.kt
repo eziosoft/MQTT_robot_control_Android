@@ -48,7 +48,7 @@ import kotlin.random.Random
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    val TESTING = true
+    val TESTING = false
     val mainViewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
 
