@@ -37,6 +37,7 @@ import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTtelemetryTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.data.RoombaParsedSensor
 import com.eziosoft.mqtt_test.data.SensorParser
+import com.eziosoft.mqtt_test.helpers.map
 import com.eziosoft.mqtt_test.helpers.to16UByteArray
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -113,6 +114,7 @@ class MainActivity : AppCompatActivity() {
                 MQTTtelemetryTopic -> {
                     mainViewModel.tvString.value =
                         message.toString()
+                    parseSmallRobotTelemetry(message.toString())
                 }
                 MQTTcontrolTopic -> {
                     Log.d("aaa", "messageArrived: $topic :" + message.toString())
@@ -241,5 +243,57 @@ class MainActivity : AppCompatActivity() {
             test()
         }
     }
+
+
+    fun parseSmallRobotTelemetry(message: String) {
+        if (message.take(2) == "TS") {
+            val data = message.split(";")
+            val time = data[1].toInt()
+            val rssi = data[2].toInt()
+            val vbat = data[3].toFloat()
+            val current = data[4].toFloat()
+            val used_mAh = data[5].toFloat()
+
+            val batPercent: Int = map(vbat, 3.3f, 4.2f, 0.0f, 100.0f).toInt()
+            mainViewModel.sensorDataSet.clear()
+            mainViewModel.sensorDataSet.add(
+                RoombaParsedSensor(
+                    26,
+                    0u,
+                    0u,
+                    100,
+                    "Max battery percentage",
+                    ""
+                )
+            )
+            mainViewModel.sensorDataSet.add(
+                RoombaParsedSensor(
+                    25,
+                    0u,
+                    0u,
+                    batPercent, "Battery Percentage", "%"
+                )
+            )
+            mainViewModel.sensorDataSet.add(
+                RoombaParsedSensor(22, 0u, 0u, (vbat * 1000).toInt())
+            )
+            mainViewModel.sensorDataSet.add(
+                RoombaParsedSensor(23, 0u, 0u, current.toInt())
+            )
+            mainViewModel.sensorDataSet.add(
+                RoombaParsedSensor(100, 0u, 0u, time)
+            )
+            mainViewModel.sensorDataSet.add(
+                RoombaParsedSensor(101, 0u, 0u, rssi)
+            )
+
+            mainViewModel.sensorDataSet.add(
+                RoombaParsedSensor(102, 0u, 0u, used_mAh.toInt())
+            )
+            mainViewModel.dataSetChanged.value = 0
+
+        }
+    }
+
 }
 

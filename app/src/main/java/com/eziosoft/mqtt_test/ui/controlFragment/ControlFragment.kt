@@ -40,7 +40,9 @@ import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.data.MqttRepository
 import com.eziosoft.mqtt_test.data.RoombaAvailableSensors
+import com.eziosoft.mqtt_test.data.RoombaParsedSensor
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
+import com.eziosoft.mqtt_test.helpers.map
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -73,6 +75,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         _binding = ControlFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -258,8 +261,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
     private fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
         val bytes =
             byteArrayOf(
-                '$'.toByte(),
-                5,
+                '$'.toByte(), 5,
                 (ch1 + 100).toByte(),
                 (ch2 + 100).toByte(),
                 (ch3 + 100).toByte(),
@@ -269,6 +271,8 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             MQTTcontrolTopic,
             bytes
         )
+
+
     }
 
 

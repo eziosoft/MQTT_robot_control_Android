@@ -121,6 +121,13 @@ object RoombaAvailableSensors {
         add(56, "Main Brush Current", 2, -32768, 32767, "mA")
         add(57, "Side Brush Current", 2, -32768, 32767, "mA")
         add(58, "Stasis", 1, 0, 3)
+
+
+        //my sensors
+        add(100, "Wakeup time", 1, 0, 32767)
+        add(101, "RSSI", 1, 32768, 32767, "dB")
+        add(102, "Used capacity", 1, 0, 32767, "mAh")
+
     }
 
 
