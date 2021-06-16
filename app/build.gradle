@@ -1,3 +1,6 @@
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
@@ -45,6 +48,7 @@ android {
 //}
 
 dependencies {
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.2.0'
@@ -88,4 +92,36 @@ dependencies {
 
 kapt {
     correctErrorTypes true //Hilt
+}
+
+
+configurations {
+    config.extendsFrom implementation
+}
+
+task extractSolvedDepsTreeToJson {
+    doLast {
+        def jsonOutput = "{"
+        jsonOutput+= "\n\t\"defaultConfig.applicationId\":\"${android.defaultConfig.applicationId}\",\n"
+        jsonOutput+="\"dependencies\":\n["
+        configurations.config.resolvedConfiguration.firstLevelModuleDependencies.each { dep ->
+            def addToJson
+            addToJson = { resolvedDep ->
+                jsonOutput += "\n\t\t{\n"
+                jsonOutput += "\t\t\t\"name\": \"${resolvedDep.module.id.group}:${resolvedDep.module.id.name}\",\n"
+                jsonOutput += "\t\t\t\"version\": \"${resolvedDep.module.id.version}\"\n"
+                jsonOutput += "\t\t},"
+            }
+            addToJson(dep)
+        }
+        if (jsonOutput[-1] == ',') {
+            jsonOutput = jsonOutput[0..-2]
+        }
+        jsonOutput += "]\n}"
+        //println jsonOutput
+
+        //save output to file
+        new File(projectDir, "used_dependencies.json").text =jsonOutput
+        println "-------->extractSolvedDepsTreeToJson - DONE"
+    }
 }
