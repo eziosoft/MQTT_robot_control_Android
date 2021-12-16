@@ -14,15 +14,14 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Copyright (c) 2020. Bartosz Szczygiel
+ * Copyright (c) 2021. Bartosz Szczygiel
  *
  */
 
-package com.eziosoft.mqtt_test.data
+package com.eziosoft.mqtt_test.repository.roomba
 
 object RoombaAvailableSensors {
     private var sensors = hashMapOf<Int, RoombaSensor>()
-
 
     private fun add(
         packetID: Int,
@@ -34,7 +33,6 @@ object RoombaAvailableSensors {
     ) {
         sensors[packetID] = RoombaSensor(packetID, name, bytes, min, max, unit)
     }
-
 
     fun getSensor(packetID: Int): RoombaSensor? {
         return if (sensors.containsKey(packetID)) {
@@ -122,14 +120,11 @@ object RoombaAvailableSensors {
         add(57, "Side Brush Current", 2, -32768, 32767, "mA")
         add(58, "Stasis", 1, 0, 3)
 
-
         //my sensors
         add(100, "Wakeup time", 1, 0, 32767)
         add(101, "RSSI", 1, 32768, 32767, "dB")
         add(102, "Used capacity", 1, 0, 32767, "mAh")
-
     }
-
 
     data class RoombaSensor(
         val packetID: Int,
@@ -140,5 +135,3 @@ object RoombaAvailableSensors {
         val unit: String = ""
     )
 }
-
-

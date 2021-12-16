@@ -22,42 +22,25 @@ package com.eziosoft.mqtt_test
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.eziosoft.mqtt_test.data.Mqtt
-import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTStreamTopic
-import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTcontrolTopic
-import com.eziosoft.mqtt_test.data.Mqtt.Companion.MQTTtelemetryTopic
-import com.eziosoft.mqtt_test.data.MqttRepository
-import com.eziosoft.mqtt_test.data.RoombaParsedSensor
-import com.eziosoft.mqtt_test.data.SensorParser
-import com.eziosoft.mqtt_test.helpers.map
 import com.eziosoft.mqtt_test.helpers.to16UByteArray
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
-import org.eclipse.paho.client.mqttv3.MqttMessage
-import javax.inject.Inject
 import kotlin.random.Random
 
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     val TESTING = false
-    val mainViewModel: MainViewModel by viewModels()
+    val viewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
-
-    @Inject
-    lateinit var mqttRepository: MqttRepository
-    lateinit var mqtt: Mqtt
-
-    lateinit var sensorParser: SensorParser
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,24 +54,12 @@ class MainActivity : AppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration((navController.graph))
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        sensorParser = SensorParser(object : SensorParser.SensorListener {
-            override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
-                if (checksumOK) processParsedSensors(sensors)
-                else
-                    Log.e("aaa", "CHECKSUM ERROR")
-            }
-
-
-        })
-        mqtt = mqttRepository.mqtt
-        mqtt.setListener(mqttListener)
-
 
         val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
-        mainViewModel.serverAddress.value =
+        viewModel.serverAddress.value =
             sharedPreferences?.getString("serverIP", "test.mosquitto.org:1883")
 
-        mainViewModel.serverAddress.observe(this) { address ->
+        viewModel.serverAddress.observe(this) { address ->
             sharedPreferences?.edit()?.putString("serverIP", address)?.apply()
         }
     }
@@ -99,92 +70,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @ExperimentalUnsignedTypes
-    private val mqttListener = object : Mqtt.MqttListener {
-        override fun onConnectComplete(reconnect: Boolean, serverURI: String?) {
-            Log.d("aaa", "connectComplete")
-            mainViewModel.tvString.value = "Connected"
-            mqtt.subscribe(MQTTtelemetryTopic)
-            mqtt.subscribe(MQTTStreamTopic)
-            mainViewModel.connectionStatus.value = true
-        }
-
-        override fun onMessageArrived(topic: String?, message: MqttMessage?) {
-            when (topic) {
-                MQTTtelemetryTopic -> {
-                    mainViewModel.tvString.value =
-                        message.toString()
-                    parseSmallRobotTelemetry(message.toString())
-                }
-                MQTTcontrolTopic -> {
-                    Log.d("aaa", "messageArrived: $topic :" + message.toString())
-                    val b = message.toString().toByteArray()
-                    if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
-                        val x: Float = -(b[2] - 100) / 100f
-                        val y: Float = -(b[3] - 100) / 100f
-
-                        mainViewModel.apply {
-                            joyX.value = x
-                            joyY.value = y
-                        }
-                    }
-                }
-
-                MQTTStreamTopic -> {
-                    val bytes = message!!.payload!!.toUByteArray()
-                    if (!bytes.isEmpty()) {
-                        sensorParser.parse(bytes)
-                    }
-                }
-            }
-        }
-
-
-        override fun onConnectionLost(cause: Throwable?) {
-            Log.d("aaa", "connectionLost")
-            mainViewModel.tvString.value = "Connection lost"
-            mainViewModel.connectionStatus.value = false
-        }
-
-        override fun onDeliveryComplete(token: IMqttDeliveryToken?) {
-        }
-
-    }
-
-
-    fun connectToMQTT() {
-//        mainViewModel.serverAddress.value = "mqtt.flespi.io:1883" //T
-        val userName = "27aQSfkPYPrH1WHfjsDejLIqJxTza4i21gIHlTn8wEDlqarztSBAr7O0swnsqvi"
-
-        val url = "tcp://" + mainViewModel.serverAddress.value
-
-        if (mqtt.isConnected()) mqtt.close()
-        mainViewModel.tvString.value =
-            getString(R.string.connectig_to, mainViewModel.serverAddress.value)
-
-        mqtt.connect(
-            this,
-            url,
-            "user${System.currentTimeMillis()}",
-            userName
-        )
-    }
-
-    var timer = 0L
-    fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
-        if (timer < System.currentTimeMillis()) {
-            timer = System.currentTimeMillis() + 250
-
-            mainViewModel.sensorDataSet.clear()
-            mainViewModel.sensorDataSet.addAll(sensors)
-
-            mainViewModel.dataSetChanged.value = 0
-        }
-        timer++
-    }
-
     fun test() {
-        GlobalScope.launch(Dispatchers.Main) {
+        lifecycleScope.launch(Dispatchers.Main) {
             while (true) {
                 delay(15)
                 val v: UByteArray = (Random.nextInt(-2000, 2000)).to16UByteArray()
@@ -231,7 +118,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 val checksum = 256u - data1.sum()
                 data1.add((checksum.toUByte()))
-                sensorParser.parse(data1.toUByteArray())
+                viewModel.sensorParser.parse(data1.toUByteArray())
             }
         }
     }
@@ -239,61 +126,8 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if (TESTING) {
-            mainViewModel.tvString.value = "TEST"
+            viewModel.tvString.value = "TEST"
             test()
         }
     }
-
-
-    fun parseSmallRobotTelemetry(message: String) {
-        if (message.take(2) == "TS") {
-            val data = message.split(";")
-            val time = data[1].toInt()
-            val rssi = data[2].toInt()
-            val vbat = data[3].toFloat()
-            val current = data[4].toFloat()
-            val used_mAh = data[5].toFloat()
-
-            val batPercent: Int = map(vbat, 3.3f, 4.2f, 0.0f, 100.0f).toInt()
-            mainViewModel.sensorDataSet.clear()
-            mainViewModel.sensorDataSet.add(
-                RoombaParsedSensor(
-                    26,
-                    0u,
-                    0u,
-                    100,
-                    "Max battery percentage",
-                    ""
-                )
-            )
-            mainViewModel.sensorDataSet.add(
-                RoombaParsedSensor(
-                    25,
-                    0u,
-                    0u,
-                    batPercent, "Battery Percentage", "%"
-                )
-            )
-            mainViewModel.sensorDataSet.add(
-                RoombaParsedSensor(22, 0u, 0u, (vbat * 1000).toInt())
-            )
-            mainViewModel.sensorDataSet.add(
-                RoombaParsedSensor(23, 0u, 0u, current.toInt())
-            )
-            mainViewModel.sensorDataSet.add(
-                RoombaParsedSensor(100, 0u, 0u, time)
-            )
-            mainViewModel.sensorDataSet.add(
-                RoombaParsedSensor(101, 0u, 0u, rssi)
-            )
-
-            mainViewModel.sensorDataSet.add(
-                RoombaParsedSensor(102, 0u, 0u, used_mAh.toInt())
-            )
-            mainViewModel.dataSetChanged.value = 0
-
-        }
-    }
-
 }
-

@@ -14,11 +14,11 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Copyright (c) 2020. Bartosz Szczygiel
+ * Copyright (c) 2021. Bartosz Szczygiel
  *
  */
 
-package com.eziosoft.mqtt_test.data
+package com.eziosoft.mqtt_test.repository.roomba
 
 data class RoombaParsedSensor @ExperimentalUnsignedTypes constructor(
     val sensorID: Int = 0,
@@ -44,5 +44,4 @@ data class RoombaParsedSensor @ExperimentalUnsignedTypes constructor(
             else -> "$signedValue$units"
         }
     }
-
 }

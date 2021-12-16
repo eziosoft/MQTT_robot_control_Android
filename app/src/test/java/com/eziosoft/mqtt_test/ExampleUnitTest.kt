@@ -1,7 +1,7 @@
 package com.eziosoft.mqtt_test
 
-import com.eziosoft.mqtt_test.data.RoombaParsedSensor
-import com.eziosoft.mqtt_test.data.SensorParser
+import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
+import com.eziosoft.mqtt_test.repository.roomba.SensorParser
 import com.eziosoft.mqtt_test.helpers.to16UByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain

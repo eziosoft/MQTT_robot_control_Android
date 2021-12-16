@@ -25,7 +25,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.eziosoft.mqtt_test.data.RoombaParsedSensor
+import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.mqtt_test.databinding.RecycleViewItemBinding
 
 @ExperimentalUnsignedTypes
@@ -44,25 +44,20 @@ class SensorsFragmentAdapter() :
 
     override fun onBindViewHolder(holder: SensorsViewHolder, position: Int) {
         val currentItem = getItem(position)
-
         if (currentItem != null) {
             holder.bind(currentItem)
         }
     }
 
-
     class SensorsViewHolder(private val binding: RecycleViewItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-
         fun bind(currentItem: RoombaParsedSensor) {
-
             binding.apply {
                 sensorName.text = currentItem.getNameAndSensorID()
                 sensorValue.text = currentItem.toStringValueWithUnits()
             }
         }
     }
-
 
     class DiffCallback : DiffUtil.ItemCallback<RoombaParsedSensor>() {
         override fun areItemsTheSame(
@@ -79,5 +74,4 @@ class SensorsFragmentAdapter() :
             return oldItem == newItem
         }
     }
-
 }
