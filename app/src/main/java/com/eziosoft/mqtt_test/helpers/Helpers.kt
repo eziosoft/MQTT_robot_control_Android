@@ -20,9 +20,6 @@
 
 package com.eziosoft.mqtt_test.helpers
 
-import android.text.Html
-import android.os.Build
-import android.text.Spanned
 import java.text.SimpleDateFormat
 import java.util.*
 

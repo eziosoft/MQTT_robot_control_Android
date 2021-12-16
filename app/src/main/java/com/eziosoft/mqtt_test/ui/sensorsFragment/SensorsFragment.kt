@@ -35,25 +35,22 @@ class SensorsFragment : Fragment(R.layout.sensors_fragment) {
     private var _binding: SensorsFragmentBinding? = null
     private val binding get() = _binding!!
 
-    private val mainViewModel by activityViewModels<MainViewModel>()
-
+    private val viewModel by activityViewModels<MainViewModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         _binding = SensorsFragmentBinding.bind(view)
 
         val adapter = SensorsFragmentAdapter()
 
         binding.apply {
             recyclerView.setHasFixedSize(true)
-//            recyclerView.itemAnimator = null
             recyclerView.adapter = adapter
         }
 
-        mainViewModel.dataSetChanged.observe(viewLifecycleOwner)
+        viewModel.dataSetChanged.observe(viewLifecycleOwner)
         {
-            adapter.submitList(mainViewModel.sensorDataSet)
+            adapter.submitList(viewModel.sensorDataSet)
             adapter.notifyDataSetChanged()
         }
     }

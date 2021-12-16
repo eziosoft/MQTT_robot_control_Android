@@ -14,11 +14,11 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Copyright (c) 2020. Bartosz Szczygiel
+ * Copyright (c) 2021. Bartosz Szczygiel
  *
  */
 
-package com.eziosoft.mqtt_test.data
+package com.eziosoft.mqtt_test.repository.mqtt
 
 import android.content.Context
 import android.util.Log
@@ -73,7 +73,6 @@ class Mqtt @Inject constructor(
         }
     }
 
-
     fun connect(
         context: Context,
         brokerURL: String,
@@ -120,5 +119,3 @@ class Mqtt @Inject constructor(
         else mqttClient.isConnected
     }
 }
-
-
