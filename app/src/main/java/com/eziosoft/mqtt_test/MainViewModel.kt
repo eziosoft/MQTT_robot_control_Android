@@ -21,14 +21,18 @@
 package com.eziosoft.mqtt_test
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.mqtt_test.repository.roomba.SensorParser
 import com.eziosoft.mqtt_test.helpers.map
+import com.eziosoft.mqtt_test.repository.mqtt2.MQTTStreamTopic
+import com.eziosoft.mqtt_test.repository.mqtt2.MQTTtelemetryTopic
+import com.eziosoft.mqtt_test.repository.mqtt2.Mqtt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -69,75 +73,86 @@ class MainViewModel @Inject constructor(val mqtt: Mqtt) :
     val connectionStatus: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
 
+    @RequiresApi(Build.VERSION_CODES.N)
     fun connectToMQTT(context: Context) {
 //        mainViewModel.serverAddress.value = "mqtt.flespi.io:1883" //T
         val userName = "27aQSfkPYPrH1WHfjsDejLIqJxTza4i21gIHlTn8wEDlqarztSBAr7O0swnsqvi"
         val url = "tcp://" + serverAddress.value
 
-        if (mqtt.isConnected()) mqtt.close()
+        if (mqtt.isConnected()) mqtt.disconnectFromBroker { }
         tvString.value = "connecting to ${serverAddress.value}"
 
-        mqtt.connect(
-            context,
-            url,
-            "user${System.currentTimeMillis()}",
-            userName
-        )
-    }
-
-
-    @ExperimentalUnsignedTypes
-    private val mqttListener = object : Mqtt.MqttListener {
-        override fun onConnectComplete(reconnect: Boolean, serverURI: String?) {
-            Log.d("aaa", "connectComplete")
-            tvString.value = "Connected"
-            mqtt.subscribe(Mqtt.MQTTtelemetryTopic)
-            mqtt.subscribe(Mqtt.MQTTStreamTopic)
-            connectionStatus.value = true
-        }
-
-        override fun onMessageArrived(topic: String?, message: MqttMessage?) {
-            when (topic) {
-                Mqtt.MQTTtelemetryTopic -> {
-                    tvString.value =
-                        message.toString()
-                    parseSmallRobotTelemetry(message.toString())
-                }
-                Mqtt.MQTTcontrolTopic -> {
-                    Log.d("aaa", "messageArrived: $topic :" + message.toString())
-                    val b = message.toString().toByteArray()
-                    if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
-                        val x: Float = -(b[2] - 100) / 100f
-                        val y: Float = -(b[3] - 100) / 100f
-
-
-                        joyX.value = x
-                        joyY.value = y
-
-                    }
-                }
-
-                Mqtt.MQTTStreamTopic -> {
-                    val bytes = message!!.payload!!.toUByteArray()
-                    if (!bytes.isEmpty()) {
-                        viewModelScope.launch(Dispatchers.IO) {
-                            sensorParser.parse(bytes)
-                        }
-                    }
-                }
+        mqtt.connectToBroker(url, "user${System.currentTimeMillis()}") { status, error ->
+            if(status)
+            {
+                mqtt.subscribeToTopic(MQTTtelemetryTopic)
+                mqtt.subscribeToTopic(MQTTStreamTopic)
+                connectionStatus.value = true
             }
         }
-
-        override fun onConnectionLost(cause: Throwable?) {
-            Log.d("aaa", "connectionLost")
-            tvString.value = "Connection lost"
-            connectionStatus.value = false
-        }
-
-        override fun onDeliveryComplete(token: IMqttDeliveryToken?) {
-        }
-
     }
+
+
+    fun setMqttObservers(){
+        viewModelScope.launch {
+            mqtt.messageFlow.collect{message ->
+
+            }
+        }
+    }
+
+//    @ExperimentalUnsignedTypes
+//    private val mqttListener = object : Mqtt.MqttListener {
+//        override fun onConnectComplete(reconnect: Boolean, serverURI: String?) {
+//            Log.d("aaa", "connectComplete")
+//            tvString.value = "Connected"
+//            mqtt.subscribe(Mqtt.MQTTtelemetryTopic)
+//            mqtt.subscribe(Mqtt.MQTTStreamTopic)
+//            connectionStatus.value = true
+//        }
+//
+//        override fun onMessageArrived(topic: String?, message: MqttMessage?) {
+//            when (topic) {
+//                Mqtt.MQTTtelemetryTopic -> {
+//                    tvString.value =
+//                        message.toString()
+//                    parseSmallRobotTelemetry(message.toString())
+//                }
+//                Mqtt.MQTTcontrolTopic -> {
+//                    Log.d("aaa", "messageArrived: $topic :" + message.toString())
+//                    val b = message.toString().toByteArray()
+//                    if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
+//                        val x: Float = -(b[2] - 100) / 100f
+//                        val y: Float = -(b[3] - 100) / 100f
+//
+//
+//                        joyX.value = x
+//                        joyY.value = y
+//
+//                    }
+//                }
+//
+//                Mqtt.MQTTStreamTopic -> {
+//                    val bytes = message!!.payload!!.toUByteArray()
+//                    if (!bytes.isEmpty()) {
+//                        viewModelScope.launch(Dispatchers.IO) {
+//                            sensorParser.parse(bytes)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        override fun onConnectionLost(cause: Throwable?) {
+//            Log.d("aaa", "connectionLost")
+//            tvString.value = "Connection lost"
+//            connectionStatus.value = false
+//        }
+//
+//        override fun onDeliveryComplete(token: IMqttDeliveryToken?) {
+//        }
+//
+//    }
 
     var timer = 0L
     fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
