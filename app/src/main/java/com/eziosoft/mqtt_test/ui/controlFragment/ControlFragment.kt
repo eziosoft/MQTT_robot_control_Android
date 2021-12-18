@@ -21,12 +21,14 @@
 package com.eziosoft.mqtt_test.ui.controlFragment
 
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -36,8 +38,8 @@ import androidx.navigation.fragment.findNavController
 import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
-import com.eziosoft.mqtt_test.repository.mqtt.Mqtt.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
+import com.eziosoft.mqtt_test.repository.mqtt2.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -64,6 +66,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -104,9 +107,9 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         binding.watchSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                viewModel.mqtt.subscribe(MQTTcontrolTopic)
+                viewModel.mqtt.subscribeToTopic(MQTTcontrolTopic)
             } else {
-                viewModel.mqtt.mqttClient.unsubscribe(MQTTcontrolTopic)
+                viewModel.mqtt.unsubscribe(MQTTcontrolTopic)
             }
         }
 
@@ -144,6 +147,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
 
         viewModel.connectionStatus.observe(viewLifecycleOwner)
         { connected ->
+            Log.d("aaaa", "connectionStatus: $connected")
             if (connected) {
                 binding.serverIP.isVisible = false
                 binding.connectButton.isVisible = false
@@ -229,10 +233,11 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                 (ch3 + 100).toByte(),
                 (ch4 + 100).toByte()
             )
-        if (viewModel.mqtt.isConnected()) viewModel.mqtt.publish(
+        if (viewModel.mqtt.isConnected()) viewModel.mqtt.publishMessage(
+            bytes,
             MQTTcontrolTopic,
-            bytes
-        )
+            false
+        ) { status, error -> }
     }
 
     private fun sendCommandsChannels(ch3: Int, ch4: Int) {
