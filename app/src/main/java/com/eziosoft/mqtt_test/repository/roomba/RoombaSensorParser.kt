@@ -21,13 +21,14 @@
 package com.eziosoft.mqtt_test.repository.roomba
 
 import kotlinx.coroutines.*
+import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.system.measureTimeMillis
 
 
 @ExperimentalUnsignedTypes
 @Singleton
-class SensorParser(private val sensorListener: SensorListener) {
+class SensorParser @Inject constructor() {
     var logging = false
     var state = STATE.HEADER
     var n: UByte = 0u
@@ -40,6 +41,12 @@ class SensorParser(private val sensorListener: SensorListener) {
 
     var isParsing = false
     private val sensors = arrayListOf<RoombaParsedSensor>()
+
+    private var sensorListener: SensorListener? = null
+
+    fun setListener(sensorListener: SensorListener) {
+        this.sensorListener = sensorListener
+    }
 
     interface SensorListener {
         fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean)
@@ -118,12 +125,12 @@ class SensorParser(private val sensorListener: SensorListener) {
                                     println(sensors.toString())
                                 }
                                 withContext(Dispatchers.Main) {
-                                    sensorListener.onSensors(sensors.toList(), true)
+                                    sensorListener?.onSensors(sensors.toList(), true)
                                 }
                             } else {
                                 if (logging) println("chksum FAILED")
                                 withContext(Dispatchers.Main) {
-                                    sensorListener.onSensors(sensors.toList(), false)
+                                    sensorListener?.onSensors(sensors.toList(), false)
                                 }
                                 state = STATE.HEADER
                             }

@@ -32,17 +32,19 @@ import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
+import com.eziosoft.mqtt_test.helpers.collectLatestLifecycleFLow
+import com.eziosoft.mqtt_test.repository.Repository
 import com.eziosoft.mqtt_test.repository.mqtt2.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
@@ -61,7 +63,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = ControlFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -70,8 +72,82 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.precisionSwich.isChecked = true
+        setupJoystick()
+        setUpListeners()
+        setUpCollectors()
 
+        binding.precisionSwich.isChecked = true
+    }
+
+    //handle tableLayout buttons
+    override fun onClick(v: View?) = with(binding) {
+        when (v?.id) {
+            buttonStart.id -> sendCommandsChannels(2, 0)
+            buttonStop.id -> sendCommandsChannels(1, 0)
+            buttonStopBrush.id -> sendCommandsChannels(11, 0)
+            buttonStartBrush.id -> sendCommandsChannels(10, 0)
+            buttonClean.id -> sendCommandsChannels(12, 0)
+            buttonDock.id -> sendCommandsChannels(3, 0)
+            buttonUnDock.id -> sendCommandsChannels(4, 0)
+            buttonPowerOff.id -> sendCommandsChannels(5, 0)
+            buttonStartStream.id -> sendCommandsChannels(20, 0)
+            buttonPauseStream.id -> sendCommandsChannels(21, 0)
+            buttonShowSensors.id ->
+                findNavController().navigate(
+                    ControlFragmentDirections.actionControlFragmentToSensorsFragment()
+                )
+        }
+    }
+
+    private fun setUpListeners() {
+        binding.connectButton.setOnClickListener()
+        {
+            viewModel.connectMqtt(binding.serverIP.text.toString())
+        }
+
+        //Add this.onClickListener to buttons in tableLayout
+        for (i in 0 until binding.gridLayout.childCount) {
+            val button = binding.gridLayout.getChildAt(i)
+            if (button is Button) button.setOnClickListener(this)
+        }
+    }
+
+    private fun setUpCollectors() {
+        collectLatestLifecycleFLow(viewModel.connectionStatus) { status ->
+            when (status) {
+                Repository.ConnectionStatus.CONNECTED -> {
+                    binding.serverIP.isVisible = false
+                    binding.connectButton.isVisible = false
+                }
+                Repository.ConnectionStatus.DISCONNECTED -> {
+                    binding.serverIP.isVisible = true
+                    binding.connectButton.isVisible = true
+                }
+            }
+        }
+
+        collectLatestLifecycleFLow(viewModel.logFlow) {
+            binding.TV.text = it
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.sensorFlow.collect { listOfSensors ->
+                binding.progressBarBattery.max = viewModel.getSensorValue(26) ?: 0
+                binding.progressBarBattery.progress = viewModel.getSensorValue(25) ?: 0
+
+                viewModel.getSensorValue(7)?.let {
+                    bumpers = it
+                    binding.viewLeft.visibility =
+                        if (bumpers == 2 || bumpers == 3) View.VISIBLE else View.INVISIBLE
+                    binding.viewRight.visibility =
+                        if (bumpers == 1 || bumpers == 3) View.VISIBLE else View.INVISIBLE
+                }
+            }
+        }
+    }
+
+
+    private fun setupJoystick() {
         binding.joystickView.apply {
             setBackgroundColor(Color.TRANSPARENT)
             setBorderWidth(5)
@@ -104,93 +180,6 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                 }
             }
         }
-
-        binding.watchSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                viewModel.mqtt.subscribeToTopic(MQTTcontrolTopic)
-            } else {
-                viewModel.mqtt.unsubscribe(MQTTcontrolTopic)
-            }
-        }
-
-        binding.connectButton.setOnClickListener()
-        {
-            viewModel.serverAddress.value = binding.serverIP.text.toString()
-            viewModel.connectToMQTT(requireContext())
-        }
-
-        //Add this.onClickListener to buttons in tableLayout
-        for (i in 0 until binding.gridLayout.childCount) {
-            val button = binding.gridLayout.getChildAt(i)
-            if (button is Button) button.setOnClickListener(this)
-        }
-
-        viewModel.tvString.observe(viewLifecycleOwner)
-        { s ->
-            binding.TV.text = s
-        }
-
-        viewModel.serverAddress.observe(viewLifecycleOwner)
-        { ip ->
-            binding.serverIP.setText(ip)
-        }
-
-        val joyObserver = Observer<Float> {
-            binding.joystickView.setPosition(
-                viewModel.joyX.value!!,
-                viewModel.joyY.value!!
-            )
-        }
-        viewModel.joyX.observe(viewLifecycleOwner, joyObserver)
-        viewModel.joyY.observe(viewLifecycleOwner, joyObserver)
-
-
-        viewModel.connectionStatus.observe(viewLifecycleOwner)
-        { connected ->
-            Log.d("aaaa", "connectionStatus: $connected")
-            if (connected) {
-                binding.serverIP.isVisible = false
-                binding.connectButton.isVisible = false
-
-            } else {
-                binding.serverIP.isVisible = true
-                binding.connectButton.isVisible = true
-            }
-        }
-
-        viewModel.dataSetChanged.observe(viewLifecycleOwner)
-        {
-            binding.progressBarBattery.max = viewModel.getSensorValue(26) ?: 0
-            binding.progressBarBattery.progress = viewModel.getSensorValue(25) ?: 0
-
-            viewModel.getSensorValue(7)?.let {
-                bumpers = it
-                binding.viewLeft.visibility =
-                    if (bumpers == 2 || bumpers == 3) View.VISIBLE else View.INVISIBLE
-                binding.viewRight.visibility =
-                    if (bumpers == 1 || bumpers == 3) View.VISIBLE else View.INVISIBLE
-            }
-        }
-    }
-
-    //handle tableLayout buttons
-    override fun onClick(v: View?) = with(binding) {
-        when (v?.id) {
-            buttonStart.id -> sendCommandsChannels(2, 0)
-            buttonStop.id -> sendCommandsChannels(1, 0)
-            buttonStopBrush.id -> sendCommandsChannels(11, 0)
-            buttonStartBrush.id -> sendCommandsChannels(10, 0)
-            buttonClean.id -> sendCommandsChannels(12, 0)
-            buttonDock.id -> sendCommandsChannels(3, 0)
-            buttonUnDock.id -> sendCommandsChannels(4, 0)
-            buttonPowerOff.id -> sendCommandsChannels(5, 0)
-            buttonStartStream.id -> sendCommandsChannels(20, 0)
-            buttonPauseStream.id -> sendCommandsChannels(21, 0)
-            buttonShowSensors.id ->
-                findNavController().navigate(
-                    ControlFragmentDirections.actionControlFragmentToSensorsFragment()
-                )
-        }
     }
 
 
@@ -219,7 +208,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > viewModel.t)) {
             viewModel.t = System.currentTimeMillis() + 100
             if (!binding.watchSwitch.isChecked)
-                if (viewModel.mqtt.isConnected())
+                if (viewModel.isMqttConnected())
                     sendChannels(ch1, ch2, ch3, ch4)
         }
     }
@@ -233,11 +222,10 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                 (ch3 + 100).toByte(),
                 (ch4 + 100).toByte()
             )
-        if (viewModel.mqtt.isConnected()) viewModel.mqtt.publishMessage(
+        if (viewModel.isMqttConnected()) viewModel.publishMessage(
             bytes,
-            MQTTcontrolTopic,
-            false
-        ) { status, error -> }
+            MQTTcontrolTopic
+        )
     }
 
     private fun sendCommandsChannels(ch3: Int, ch4: Int) {

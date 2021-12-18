@@ -33,13 +33,14 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.eziosoft.mqtt_test.helpers.to16UByteArray
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 import kotlin.random.Random
 
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     val TESTING = false
-    val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
 
 
@@ -56,11 +57,12 @@ class MainActivity : AppCompatActivity() {
 
 
         val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
-        viewModel.serverAddress.value =
-            sharedPreferences?.getString("serverIP", "test.mosquitto.org:1883")
+        viewModel.serverAddress.value = sharedPreferences?.getString("serverIP", "192.168.0.19") ?: ""
 
-        viewModel.serverAddress.observe(this) { address ->
-            sharedPreferences?.edit()?.putString("serverIP", address)?.apply()
+        lifecycleScope.launchWhenStarted {
+            viewModel.serverAddress.collect { address->
+                sharedPreferences?.edit()?.putString("serverIP", address)?.apply()
+            }
         }
     }
 
@@ -70,64 +72,64 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun test() {
-        lifecycleScope.launch(Dispatchers.Main) {
-            while (true) {
-                delay(15)
-                val v: UByteArray = (Random.nextInt(-2000, 2000)).to16UByteArray()
-
-                val data1: ArrayList<UByte> =
-                    arrayListOf(
-                        19u,
-                        35u,
-                        46u,
-                        10u,
-                        Random.nextInt(255).toUByte(),
-                        47u,
-                        10u,
-                        Random.nextInt(255).toUByte(),
-                        48u,
-                        10u,
-                        Random.nextInt(255).toUByte(),
-                        49u,
-                        10u,
-                        Random.nextInt(255).toUByte(),
-                        50u,
-                        10u,
-                        Random.nextInt(255).toUByte(),
-                        51u,
-                        10u,
-                        Random.nextInt(255).toUByte(),
-                        26u,
-                        100u,
-                        0u,
-                        25u,
-                        80u,
-                        Random.nextInt(255).toUByte(),
-                        23u,
-                        v[0],
-                        v[1],
-                        22u,
-                        0u,
-                        Random.nextInt(200).toUByte(),
-                        29u,
-                        2u,
-                        Random.nextInt(200).toUByte(),
-                        13u,
-                        Random.nextInt(2).toUByte()
-                    )
-                val checksum = 256u - data1.sum()
-                data1.add((checksum.toUByte()))
-                viewModel.sensorParser.parse(data1.toUByteArray())
-            }
-        }
-    }
+//    fun test() {
+//        lifecycleScope.launch(Dispatchers.Main) {
+//            while (true) {
+//                delay(15)
+//                val v: UByteArray = (Random.nextInt(-2000, 2000)).to16UByteArray()
+//
+//                val data1: ArrayList<UByte> =
+//                    arrayListOf(
+//                        19u,
+//                        35u,
+//                        46u,
+//                        10u,
+//                        Random.nextInt(255).toUByte(),
+//                        47u,
+//                        10u,
+//                        Random.nextInt(255).toUByte(),
+//                        48u,
+//                        10u,
+//                        Random.nextInt(255).toUByte(),
+//                        49u,
+//                        10u,
+//                        Random.nextInt(255).toUByte(),
+//                        50u,
+//                        10u,
+//                        Random.nextInt(255).toUByte(),
+//                        51u,
+//                        10u,
+//                        Random.nextInt(255).toUByte(),
+//                        26u,
+//                        100u,
+//                        0u,
+//                        25u,
+//                        80u,
+//                        Random.nextInt(255).toUByte(),
+//                        23u,
+//                        v[0],
+//                        v[1],
+//                        22u,
+//                        0u,
+//                        Random.nextInt(200).toUByte(),
+//                        29u,
+//                        2u,
+//                        Random.nextInt(200).toUByte(),
+//                        13u,
+//                        Random.nextInt(2).toUByte()
+//                    )
+//                val checksum = 256u - data1.sum()
+//                data1.add((checksum.toUByte()))
+//                viewModel.sensorParser.parse(data1.toUByteArray())
+//            }
+//        }
+//    }
 
     override fun onStart() {
         super.onStart()
-        if (TESTING) {
-            viewModel.tvString.value = "TEST"
-            test()
-        }
+//        if (TESTING) {
+//            viewModel.tvString.value = "TEST"
+//            test()
+//        }
     }
 }
