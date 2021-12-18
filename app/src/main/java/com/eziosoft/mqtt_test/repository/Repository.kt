@@ -20,20 +20,13 @@
 
 package com.eziosoft.mqtt_test.repository
 
-import android.content.Context
 import android.util.Log
-import androidx.lifecycle.viewModelScope
 import com.eziosoft.mqtt_test.helpers.map
-import com.eziosoft.mqtt_test.repository.mqtt2.MQTTStreamTopic
-import com.eziosoft.mqtt_test.repository.mqtt2.MQTTcontrolTopic
-import com.eziosoft.mqtt_test.repository.mqtt2.MQTTtelemetryTopic
-import com.eziosoft.mqtt_test.repository.mqtt2.Mqtt
+import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.mqtt_test.repository.roomba.SensorParser
-import hilt_aggregated_deps._dagger_hilt_android_flags_FragmentGetContextFix_FragmentGetContextFixEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
@@ -183,5 +176,11 @@ class Repository @Inject constructor(
             )
             sensorsFlow.value = sensorDataSet
         }
+    }
+    companion object{
+        val robotName = "tank"
+        val MQTTcontrolTopic = "$robotName/in"
+        val MQTTtelemetryTopic = "$robotName/out"
+        val MQTTStreamTopic = "$robotName/stream"
     }
 }

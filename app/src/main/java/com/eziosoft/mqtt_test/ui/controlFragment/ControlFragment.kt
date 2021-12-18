@@ -40,11 +40,10 @@ import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.helpers.collectLatestLifecycleFLow
 import com.eziosoft.mqtt_test.repository.Repository
-import com.eziosoft.mqtt_test.repository.mqtt2.MQTTcontrolTopic
+import com.eziosoft.mqtt_test.repository.Repository.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
