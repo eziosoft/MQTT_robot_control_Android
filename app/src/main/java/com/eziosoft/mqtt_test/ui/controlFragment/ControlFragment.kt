@@ -130,18 +130,16 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             binding.TV.text = it
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.sensorFlow.collect { listOfSensors ->
-                binding.progressBarBattery.max = viewModel.getSensorValue(26) ?: 0
-                binding.progressBarBattery.progress = viewModel.getSensorValue(25) ?: 0
+        collectLatestLifecycleFLow(viewModel.sensorFlow) { listOfSensors ->
+            binding.progressBarBattery.max = viewModel.getSensorValue(26) ?: 0
+            binding.progressBarBattery.progress = viewModel.getSensorValue(25) ?: 0
 
-                viewModel.getSensorValue(7)?.let {
-                    bumpers = it
-                    binding.viewLeft.visibility =
-                        if (bumpers == 2 || bumpers == 3) View.VISIBLE else View.INVISIBLE
-                    binding.viewRight.visibility =
-                        if (bumpers == 1 || bumpers == 3) View.VISIBLE else View.INVISIBLE
-                }
+            viewModel.getSensorValue(7)?.let {
+                bumpers = it
+                binding.viewLeft.visibility =
+                    if (bumpers == 2 || bumpers == 3) View.VISIBLE else View.INVISIBLE
+                binding.viewRight.visibility =
+                    if (bumpers == 1 || bumpers == 3) View.VISIBLE else View.INVISIBLE
             }
         }
     }
