@@ -43,7 +43,7 @@ class MainViewModel @Inject constructor(val repository: Repository) :
     val sensorFlow = repository.sensorFlow
 
     fun connectMqtt(url: String) = repository.connectToMQTT(url)
-    fun getSensorValue(id: Int) = repository.getSensorValue(id)
+//    fun getSensorValue(id: Int) = repository.getSensorValue(id)
     fun publishMessage(message: String, topic: String) = repository.publishMessage(message, topic)
     private fun publishMessage(bytes: ByteArray, topic: String) =
         repository.publishMessage(bytes, topic)

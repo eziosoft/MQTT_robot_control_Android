@@ -38,6 +38,7 @@ import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.helpers.collectLatestLifecycleFLow
 import com.eziosoft.mqtt_test.repository.Repository
+import com.eziosoft.mqtt_test.repository.getSensorValue
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -125,10 +126,10 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
         }
 
         collectLatestLifecycleFLow(viewModel.sensorFlow) { listOfSensors ->
-            binding.progressBarBattery.max = viewModel.getSensorValue(26) ?: 0
-            binding.progressBarBattery.progress = viewModel.getSensorValue(25) ?: 0
+            binding.progressBarBattery.max = listOfSensors.getSensorValue(26) ?: 0
+            binding.progressBarBattery.progress = listOfSensors.getSensorValue(25) ?: 0
 
-            viewModel.getSensorValue(7)?.let {
+            listOfSensors.getSensorValue(7)?.let {
                 bumpers = it
                 binding.viewLeft.visibility =
                     if (bumpers == 2 || bumpers == 3) View.VISIBLE else View.INVISIBLE

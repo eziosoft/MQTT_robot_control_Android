@@ -81,9 +81,11 @@ class Repository @Inject constructor(
         }
     }
 
-    fun getSensorValue(id: Int): Int? {
-        return sensorDataSet.find { it.sensorID == id }?.signedValue
-    }
+//    fun getSensorValue(id: Int): Int? {
+//        return sensorDataSet.find { it.sensorID == id }?.signedValue
+//    }
+
+
 
     fun connectToMQTT(url: String) {
         toLogFlow("connecting to $url")
@@ -166,4 +168,8 @@ class Repository @Inject constructor(
     enum class ConnectionStatus {
         DISCONNECTED, CONNECTED
     }
+}
+
+fun List<RoombaParsedSensor>.getSensorValue(id: Int): Int? {
+    return this.find { it.sensorID == id }?.signedValue
 }
