@@ -23,7 +23,6 @@ package com.eziosoft.mqtt_test.ui.controlFragment
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,19 +33,15 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.eziosoft.mqtt_test.BuildConfig
 import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.databinding.ControlFragmentBinding
 import com.eziosoft.mqtt_test.helpers.collectLatestLifecycleFLow
 import com.eziosoft.mqtt_test.repository.Repository
-import com.eziosoft.mqtt_test.repository.Repository.Companion.MQTTcontrolTopic
 import com.eziosoft.mqtt_test.ui.customViews.JoystickView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.cos
-import kotlin.math.sin
 
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
@@ -160,53 +155,47 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
                     if (binding.avoidSwitch.isChecked) {
                         //left
                         if (bumpers == 2 || bumpers == 3) {
-                            handleJoystick(270, 100)
+                            viewModel.sendJoystickData(
+                                270,
+                                100,
+                                binding.precisionSwich.isChecked,
+                                binding.watchSwitch.isChecked
+                            )
                             delay(200)
-                            handleJoystick(0, 100)
+                            viewModel.sendJoystickData(
+                                0,
+                                100,
+                                binding.precisionSwich.isChecked,
+                                binding.watchSwitch.isChecked
+                            )
                             delay(300)
                         }
                         //right
                         if (bumpers == 1 || bumpers == 3) {
-                            handleJoystick(270, 100)
+                            viewModel.sendJoystickData(
+                                270,
+                                100,
+                                binding.precisionSwich.isChecked,
+                                binding.watchSwitch.isChecked
+                            )
                             delay(200)
-                            handleJoystick(180, 100)
+                            viewModel.sendJoystickData(
+                                180,
+                                100,
+                                binding.precisionSwich.isChecked,
+                                binding.watchSwitch.isChecked
+                            )
                             delay(300)
                         }
                     }
-                    handleJoystick(angle, strength)
+                    viewModel.sendJoystickData(
+                        angle,
+                        strength,
+                        binding.precisionSwich.isChecked,
+                        binding.watchSwitch.isChecked
+                    )
                 }
             }
-        }
-    }
-
-
-    private fun handleJoystick(angle: Int, strength: Int) {
-        Log.d("aaa", "handleJoystick: angle=$angle  strength=$strength")
-
-        var x = cos(Math.toRadians(angle.toDouble())) * strength / 100f
-        var y = sin(Math.toRadians(angle.toDouble())) * strength / 100f
-
-        var ch1 = 0
-        var ch2 = 0
-        val ch3 = 0
-        val ch4 = 0
-
-        if (binding.precisionSwich.isChecked) {
-            x /= 4f
-            y /= 4f
-        }
-
-        ch1 = (-x * 100).toInt()
-        ch2 = (y * 100).toInt()
-
-        if (BuildConfig.DEBUG)
-            Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
-
-        if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > viewModel.t)) {
-            viewModel.t = System.currentTimeMillis() + 100
-            if (!binding.watchSwitch.isChecked)
-                if (viewModel.isMqttConnected())
-                    viewModel.sendChannels(ch1, ch2, ch3, ch4)
         }
     }
 
