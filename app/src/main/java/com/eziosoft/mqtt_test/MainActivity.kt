@@ -36,10 +36,8 @@ import kotlinx.coroutines.flow.collect
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    val TESTING = false
     private val viewModel: MainViewModel by viewModels()
     private lateinit var navController: NavController
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +49,6 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.findNavController()
         val appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
-
 
         val sharedPreferences = getSharedPreferences("settings", Context.MODE_PRIVATE)
         viewModel.serverAddress.value = sharedPreferences?.getString("serverIP", "192.168.0.19") ?: ""
@@ -66,67 +63,5 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
-    }
-
-
-//    fun test() {
-//        lifecycleScope.launch(Dispatchers.Main) {
-//            while (true) {
-//                delay(15)
-//                val v: UByteArray = (Random.nextInt(-2000, 2000)).to16UByteArray()
-//
-//                val data1: ArrayList<UByte> =
-//                    arrayListOf(
-//                        19u,
-//                        35u,
-//                        46u,
-//                        10u,
-//                        Random.nextInt(255).toUByte(),
-//                        47u,
-//                        10u,
-//                        Random.nextInt(255).toUByte(),
-//                        48u,
-//                        10u,
-//                        Random.nextInt(255).toUByte(),
-//                        49u,
-//                        10u,
-//                        Random.nextInt(255).toUByte(),
-//                        50u,
-//                        10u,
-//                        Random.nextInt(255).toUByte(),
-//                        51u,
-//                        10u,
-//                        Random.nextInt(255).toUByte(),
-//                        26u,
-//                        100u,
-//                        0u,
-//                        25u,
-//                        80u,
-//                        Random.nextInt(255).toUByte(),
-//                        23u,
-//                        v[0],
-//                        v[1],
-//                        22u,
-//                        0u,
-//                        Random.nextInt(200).toUByte(),
-//                        29u,
-//                        2u,
-//                        Random.nextInt(200).toUByte(),
-//                        13u,
-//                        Random.nextInt(2).toUByte()
-//                    )
-//                val checksum = 256u - data1.sum()
-//                data1.add((checksum.toUByte()))
-//                viewModel.sensorParser.parse(data1.toUByteArray())
-//            }
-//        }
-//    }
-
-    override fun onStart() {
-        super.onStart()
-//        if (TESTING) {
-//            viewModel.tvString.value = "TEST"
-//            test()
-//        }
     }
 }
