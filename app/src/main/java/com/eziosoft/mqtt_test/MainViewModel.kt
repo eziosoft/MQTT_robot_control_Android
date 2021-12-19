@@ -48,4 +48,23 @@ class MainViewModel @Inject constructor(val repository: Repository) :
 
     fun isMqttConnected() = connectionStatus.value == Repository.ConnectionStatus.CONNECTED
 
+
+    fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
+        val bytes =
+            byteArrayOf(
+                '$'.toByte(), 5,
+                (ch1 + 100).toByte(),
+                (ch2 + 100).toByte(),
+                (ch3 + 100).toByte(),
+                (ch4 + 100).toByte()
+            )
+        if (isMqttConnected()) publishMessage(
+            bytes,
+            Repository.MQTTcontrolTopic
+        )
+    }
+
+    fun sendCommandsChannels(ch3: Int, ch4: Int) {
+        sendChannels(0, 0, ch3, ch4)
+    }
 }

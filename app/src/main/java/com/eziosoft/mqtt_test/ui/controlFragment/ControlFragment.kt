@@ -81,16 +81,16 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
     //handle tableLayout buttons
     override fun onClick(v: View?) = with(binding) {
         when (v?.id) {
-            buttonStart.id -> sendCommandsChannels(2, 0)
-            buttonStop.id -> sendCommandsChannels(1, 0)
-            buttonStopBrush.id -> sendCommandsChannels(11, 0)
-            buttonStartBrush.id -> sendCommandsChannels(10, 0)
-            buttonClean.id -> sendCommandsChannels(12, 0)
-            buttonDock.id -> sendCommandsChannels(3, 0)
-            buttonUnDock.id -> sendCommandsChannels(4, 0)
-            buttonPowerOff.id -> sendCommandsChannels(5, 0)
-            buttonStartStream.id -> sendCommandsChannels(20, 0)
-            buttonPauseStream.id -> sendCommandsChannels(21, 0)
+            buttonStart.id -> viewModel.sendCommandsChannels(2, 0)
+            buttonStop.id -> viewModel.sendCommandsChannels(1, 0)
+            buttonStopBrush.id -> viewModel.sendCommandsChannels(11, 0)
+            buttonStartBrush.id -> viewModel.sendCommandsChannels(10, 0)
+            buttonClean.id -> viewModel.sendCommandsChannels(12, 0)
+            buttonDock.id -> viewModel.sendCommandsChannels(3, 0)
+            buttonUnDock.id -> viewModel.sendCommandsChannels(4, 0)
+            buttonPowerOff.id -> viewModel.sendCommandsChannels(5, 0)
+            buttonStartStream.id -> viewModel.sendCommandsChannels(20, 0)
+            buttonPauseStream.id -> viewModel.sendCommandsChannels(21, 0)
             buttonShowSensors.id ->
                 findNavController().navigate(
                     ControlFragmentDirections.actionControlFragmentToSensorsFragment()
@@ -206,28 +206,10 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             viewModel.t = System.currentTimeMillis() + 100
             if (!binding.watchSwitch.isChecked)
                 if (viewModel.isMqttConnected())
-                    sendChannels(ch1, ch2, ch3, ch4)
+                    viewModel.sendChannels(ch1, ch2, ch3, ch4)
         }
     }
 
-    private fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
-        val bytes =
-            byteArrayOf(
-                '$'.toByte(), 5,
-                (ch1 + 100).toByte(),
-                (ch2 + 100).toByte(),
-                (ch3 + 100).toByte(),
-                (ch4 + 100).toByte()
-            )
-        if (viewModel.isMqttConnected()) viewModel.publishMessage(
-            bytes,
-            MQTTcontrolTopic
-        )
-    }
-
-    private fun sendCommandsChannels(ch3: Int, ch4: Int) {
-        sendChannels(0, 0, ch3, ch4)
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
