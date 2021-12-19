@@ -125,6 +125,7 @@ class ControlFragment : Fragment(R.layout.control_fragment), View.OnClickListene
             binding.TV.text = it
         }
 
+        viewModel.repository.reportSensorsInterval = 0
         collectLatestLifecycleFLow(viewModel.sensorFlow) { listOfSensors ->
             binding.progressBarBattery.max = listOfSensors.getSensorValue(26) ?: 0
             binding.progressBarBattery.progress = listOfSensors.getSensorValue(25) ?: 0
