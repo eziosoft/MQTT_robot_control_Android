@@ -14,7 +14,7 @@
  *     You should have received a copy of the GNU General Public License
  *     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Copyright (c) 2020. Bartosz Szczygiel
+ * Copyright (c) 2021. Bartosz Szczygiel
  *
  */
 
