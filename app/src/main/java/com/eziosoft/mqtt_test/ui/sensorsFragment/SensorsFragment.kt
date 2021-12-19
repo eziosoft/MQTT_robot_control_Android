@@ -50,8 +50,7 @@ class SensorsFragment : Fragment(R.layout.sensors_fragment) {
             recyclerView.adapter = adapter
         }
 
-
-
+        viewModel.repository.reportSensorsInterval = 500
         collectLatestLifecycleFLow(viewModel.sensorFlow) { listOfSensors ->
             Log.d("aaa", "sensor fragment: ")
             adapter.submitList(listOfSensors)
