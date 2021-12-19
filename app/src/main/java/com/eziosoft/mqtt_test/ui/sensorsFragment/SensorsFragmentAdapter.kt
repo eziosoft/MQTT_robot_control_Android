@@ -29,7 +29,7 @@ import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
 import com.eziosoft.mqtt_test.databinding.RecycleViewItemBinding
 
 @ExperimentalUnsignedTypes
-class SensorsFragmentAdapter() :
+class SensorsFragmentAdapter :
     ListAdapter<RoombaParsedSensor, SensorsFragmentAdapter.SensorsViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(

@@ -88,8 +88,10 @@ class Repository @Inject constructor(
     fun connectToMQTT(url: String) {
         toLogFlow("connecting to $url")
 
-        if (mqtt.isConnected()) mqtt.disconnectFromBroker { status, error ->
-            setConnectionStatus(status)
+        if (mqtt.isConnected()) {
+            mqtt.disconnectFromBroker { status, error ->
+                setConnectionStatus(status)
+            }
         }
 
         mqtt.connectToBroker(url, "user${System.currentTimeMillis()}") { status, error ->
@@ -114,8 +116,11 @@ class Repository @Inject constructor(
     }
 
     private fun setConnectionStatus(connected: Boolean) {
-        _connectionStatus.value = if (connected) ConnectionStatus.CONNECTED else
+        _connectionStatus.value = if (connected) {
+            ConnectionStatus.CONNECTED
+        } else {
             ConnectionStatus.DISCONNECTED
+        }
     }
 
     fun publishMessage(message: String, topic: String) {
@@ -128,9 +133,11 @@ class Repository @Inject constructor(
 
     override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
         Log.d("aaa", "onSensors: ")
-        if (checksumOK) processParsedSensors(sensors)
-        else
+        if (checksumOK) {
+            processParsedSensors(sensors)
+        } else {
             Log.e("aaa", "CHECKSUM ERROR")
+        }
     }
 
     var timer = 0L
@@ -146,7 +153,7 @@ class Repository @Inject constructor(
     }
 
     private fun toLogFlow(string: String) {
-        _logFlow.value = (string)
+        _logFlow.value = string
     }
 
     companion object {

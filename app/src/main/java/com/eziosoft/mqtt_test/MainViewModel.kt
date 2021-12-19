@@ -22,6 +22,7 @@ package com.eziosoft.mqtt_test
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.viewbinding.BuildConfig
 import com.eziosoft.mqtt_test.repository.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,7 @@ class MainViewModel @Inject constructor(val repository: Repository) :
 
     private fun isMqttConnected() = repository.isConnected()
 
+    @Suppress("ComplexMethod", "ComplexCondition")
     fun sendJoystickData(angle: Int, strength: Int, precision: Boolean, watch: Boolean) {
         Log.d("aaa", "handleJoystick: angle=$angle  strength=$strength")
 
@@ -69,12 +71,10 @@ class MainViewModel @Inject constructor(val repository: Repository) :
             Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
         }
 
-        if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > timer)) {
+        if (ch1 == 0 && ch2 == 0 || ch3 == 0 && ch4 == 0 || System.currentTimeMillis() > timer) {
             timer = System.currentTimeMillis() + JOYSTICK_SEND_COMMAND_PERIOD
-            if (!watch) {
-                if (isMqttConnected()) {
-                    sendChannels(ch1, ch2, ch3, ch4)
-                }
+            if (!watch && isMqttConnected()) {
+                sendChannels(ch1, ch2, ch3, ch4)
             }
         }
     }
@@ -93,10 +93,12 @@ class MainViewModel @Inject constructor(val repository: Repository) :
                 (ch3 + 100).toByte(),
                 (ch4 + 100).toByte()
             )
-        if (isMqttConnected()) publishMessage(
-            bytes,
-            Repository.MQTT_CONTROL_TOPIC
-        )
+        if (isMqttConnected()) {
+            publishMessage(
+                bytes,
+                Repository.MQTT_CONTROL_TOPIC
+            )
+        }
     }
 
     fun sendCommandsChannels(ch3: Int, ch4: Int) {

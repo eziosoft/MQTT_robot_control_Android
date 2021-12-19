@@ -48,6 +48,7 @@ class RoombaSensorParser @Inject constructor() {
         this.sensorListener = sensorListener
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     suspend fun parse(bytes: UByteArray) {
         val elapsed = measureTimeMillis {
             isParsing = true

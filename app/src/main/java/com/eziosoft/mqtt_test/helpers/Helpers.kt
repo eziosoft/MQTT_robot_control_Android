@@ -20,8 +20,6 @@
 
 package com.eziosoft.mqtt_test.helpers
 
-import android.app.Activity
-import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -37,7 +35,7 @@ import java.util.*
 fun Int.to16UByteArray(): UByteArray {
     val bytes = UByteArray(2)
     bytes[1] = (this and 0xFFFF).toUByte()
-    bytes[0] = ((this ushr 8) and 0xFFFF).toUByte()
+    bytes[0] = (this ushr 8 and 0xFFFF).toUByte()
     return bytes
 }
 
@@ -73,10 +71,12 @@ fun decryptStringWithXORFromHex(input: String, key: String): String {
     return c.toString()
 }
 
+@Suppress("FunctionParameterNaming")
 fun map(x: Float, in_min: Float, in_max: Float, out_min: Float, out_max: Float): Float {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 }
 
+@Suppress("FunctionParameterNaming")
 fun map(x: Int, in_min: Int, in_max: Int, out_min: Int, out_max: Int): Int {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 }
