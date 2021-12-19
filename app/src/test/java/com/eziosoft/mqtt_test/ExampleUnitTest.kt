@@ -1,7 +1,7 @@
 package com.eziosoft.mqtt_test
 
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
-import com.eziosoft.mqtt_test.repository.roomba.SensorParser
+import com.eziosoft.mqtt_test.repository.roomba.RoombaSensorParser
 import com.eziosoft.mqtt_test.helpers.to16UByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain
@@ -37,7 +37,7 @@ class ExampleUnitTest {
     fun parserTest() {
         var count = 0
         var checkSum =false
-        val sensorParser = SensorParser(object : SensorParser.SensorListener {
+        val sensorParser = RoombaSensorParser(object : RoombaSensorParser.SensorListener {
             override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
                 if(checksumOK) checkSum=true //check if checksum was OK at least once
 
@@ -89,7 +89,7 @@ class ExampleUnitTest {
     @ExperimentalUnsignedTypes
     @Test
     fun parserTestSignedValues() {
-        val sensorParser = SensorParser(object : SensorParser.SensorListener {
+        val sensorParser = RoombaSensorParser(object : RoombaSensorParser.SensorListener {
 
             override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
 

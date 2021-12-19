@@ -21,14 +21,17 @@
 package com.eziosoft.mqtt_test.ui.sensorsFragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.databinding.SensorsFragmentBinding
 import com.eziosoft.mqtt_test.helpers.collectLatestLifecycleFLow
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
 
 @ExperimentalUnsignedTypes
 @AndroidEntryPoint
@@ -49,7 +52,10 @@ class SensorsFragment : Fragment(R.layout.sensors_fragment) {
             recyclerView.adapter = adapter
         }
 
+
+
         collectLatestLifecycleFLow(viewModel.sensorFlow) { listOfSensors ->
+            Log.d("aaa", "sensor fragment: ")
             adapter.submitList(listOfSensors)
             adapter.notifyDataSetChanged()
         }

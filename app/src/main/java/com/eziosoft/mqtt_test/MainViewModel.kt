@@ -34,25 +34,57 @@ import kotlin.math.sin
 class MainViewModel @Inject constructor(val repository: Repository) :
     ViewModel() {
 
+    var timer: Long = 0
     var serverAddress = MutableStateFlow("")
-
-    var t: Long = 0
 
     val connectionStatus = repository.connectionStatus
     val logFlow = repository.logFlow
-    val sensorFlow = repository.sensorsFlow
-
+    val sensorFlow = repository.sensorFlow
 
     fun connectMqtt(url: String) = repository.connectToMQTT(url)
     fun getSensorValue(id: Int) = repository.getSensorValue(id)
     fun publishMessage(message: String, topic: String) = repository.publishMessage(message, topic)
-    fun publishMessage(bytes: ByteArray, topic: String) = repository.publishMessage(bytes, topic)
+    private fun publishMessage(bytes: ByteArray, topic: String) =
+        repository.publishMessage(bytes, topic)
 
+    private fun isMqttConnected() = repository.isConnected()
 
-    fun isMqttConnected() = connectionStatus.value == Repository.ConnectionStatus.CONNECTED
+    fun sendJoystickData(angle: Int, strength: Int, precision: Boolean, watch: Boolean) {
+        Log.d("aaa", "handleJoystick: angle=$angle  strength=$strength")
 
+        var x = cos(Math.toRadians(angle.toDouble())) * strength / 100f
+        var y = sin(Math.toRadians(angle.toDouble())) * strength / 100f
 
-    fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
+        if (precision) {
+            x /= 4f
+            y /= 4f
+        }
+
+        val ch1 = (-x * 100).toInt()
+        val ch2 = (y * 100).toInt()
+        val ch3 = 0
+        val ch4 = 0
+
+        if (BuildConfig.DEBUG) {
+            Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
+        }
+
+        if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > timer)) {
+            timer = System.currentTimeMillis() + JOYSTICK_SEND_COMMAND_PERIOD
+            if (!watch) {
+                if (isMqttConnected()) {
+                    sendChannels(ch1, ch2, ch3, ch4)
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        repository.disconnect()
+        super.onCleared()
+    }
+
+    private fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
         val bytes =
             byteArrayOf(
                 '$'.toByte(), 5,
@@ -63,7 +95,7 @@ class MainViewModel @Inject constructor(val repository: Repository) :
             )
         if (isMqttConnected()) publishMessage(
             bytes,
-            Repository.MQTTcontrolTopic
+            Repository.MQTT_CONTROL_TOPIC
         )
     }
 
@@ -71,36 +103,7 @@ class MainViewModel @Inject constructor(val repository: Repository) :
         sendChannels(0, 0, ch3, ch4)
     }
 
-     fun sendJoystickData(angle: Int, strength: Int, precision: Boolean, watch: Boolean) {
-        Log.d("aaa", "handleJoystick: angle=$angle  strength=$strength")
-
-        var x = cos(Math.toRadians(angle.toDouble())) * strength / 100f
-        var y = sin(Math.toRadians(angle.toDouble())) * strength / 100f
-
-        var ch1 = 0
-        var ch2 = 0
-        val ch3 = 0
-        val ch4 = 0
-
-        if (precision) {
-            x /= 4f
-            y /= 4f
-        }
-
-        ch1 = (-x * 100).toInt()
-        ch2 = (y * 100).toInt()
-
-        if (BuildConfig.DEBUG) {
-            Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
-        }
-
-        if ((ch1 == 0 && ch2 == 0) || (ch3 == 0 && ch4 == 0) || (System.currentTimeMillis() > t)) {
-            t = System.currentTimeMillis() + 100
-            if (!watch) {
-                if (isMqttConnected()) {
-                    sendChannels(ch1, ch2, ch3, ch4)
-                }
-            }
-        }
+    companion object {
+        const val JOYSTICK_SEND_COMMAND_PERIOD = 100 // in ms
     }
 }

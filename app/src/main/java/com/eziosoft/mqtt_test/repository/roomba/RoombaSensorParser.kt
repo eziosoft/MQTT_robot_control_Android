@@ -28,28 +28,24 @@ import kotlin.system.measureTimeMillis
 
 @ExperimentalUnsignedTypes
 @Singleton
-class SensorParser @Inject constructor() {
+class RoombaSensorParser @Inject constructor() {
     var logging = false
-    var state = STATE.HEADER
-    var n: UByte = 0u
-    var ni = 0
-    var chksum: UByte = 0u
-    var b1: UByte = 0u
-    var b2: UByte = 0u
-    var value = 0
-    var packetID: Int = 0
+    private var state = STATE.HEADER
+    private var n: UByte = 0u
+    private var ni = 0
+    private var chksum: UByte = 0u
+    private var b1: UByte = 0u
+    private var b2: UByte = 0u
+    private var value = 0
+    private var packetID: Int = 0
 
-    var isParsing = false
+    private var isParsing = false
     private val sensors = arrayListOf<RoombaParsedSensor>()
 
     private var sensorListener: SensorListener? = null
 
     fun setListener(sensorListener: SensorListener) {
         this.sensorListener = sensorListener
-    }
-
-    interface SensorListener {
-        fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean)
     }
 
     suspend fun parse(bytes: UByteArray) {
@@ -156,6 +152,10 @@ class SensorParser @Inject constructor() {
             isParsing = false
         }
         if (logging) println("---------------------------------->$elapsed")
+    }
+
+    interface SensorListener {
+        fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean)
     }
 
     companion object {

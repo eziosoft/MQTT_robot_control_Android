@@ -21,10 +21,10 @@
 package com.eziosoft.mqtt_test.repository
 
 import android.util.Log
-import com.eziosoft.mqtt_test.helpers.map
 import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
 import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
-import com.eziosoft.mqtt_test.repository.roomba.SensorParser
+import com.eziosoft.mqtt_test.repository.roomba.RoombaSensorParser
+import com.eziosoft.mqtt_test.repository.smallRobot.SmallRobotSensorParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,9 +38,10 @@ import javax.inject.Singleton
 @Singleton
 class Repository @Inject constructor(
     private val mqtt: Mqtt,
-    private val sensorParser: SensorParser
+    private val roombaSensorParser: RoombaSensorParser,
+    private val smallRobotSensorParser: SmallRobotSensorParser
 ) :
-    SensorParser.SensorListener {
+    RoombaSensorParser.SensorListener {
 
     private val sensorDataSet = arrayListOf<RoombaParsedSensor>()
     private val _logFlow = MutableStateFlow<String>("")
@@ -48,15 +49,11 @@ class Repository @Inject constructor(
     private val _connectionStatus = MutableStateFlow(ConnectionStatus.DISCONNECTED)
     val connectionStatus = _connectionStatus.asStateFlow()
 
-    val sensorsFlow = MutableStateFlow<List<RoombaParsedSensor>>(emptyList())
-
-
-    enum class ConnectionStatus {
-        DISCONNECTED, CONNECTED
-    }
+    private val _sensorsFlow = MutableStateFlow<List<RoombaParsedSensor>>(emptyList())
+    val sensorFlow = _sensorsFlow.asStateFlow()
 
     init {
-        sensorParser.setListener(this)
+        roombaSensorParser.setListener(this)
         setupObservers()
     }
 
@@ -64,14 +61,19 @@ class Repository @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             mqtt.messageFlow.collect { message ->
                 when (message.topic) {
-                    MQTTtelemetryTopic -> {
-                        toLogFlow(String(message.message))
-                        parseSmallRobotTelemetry(message.toString())
+                    MQTT_TELEMETRY_TOPIC -> {
+                        val telemetry = String(message.message)
+                        toLogFlow(telemetry)
+                        val smallRobotSensors =
+                            smallRobotSensorParser.parseSmallRobotTelemetry(telemetry)
+                        if (smallRobotSensors.isNotEmpty()) {
+                            onSensors(smallRobotSensors, checksumOK = true)
+                        }
                     }
-                    MQTTStreamTopic -> {
+                    MQTT_STREAM_TOPIC -> {
                         val bytes = message.message.toUByteArray()
                         if (!bytes.isEmpty()) {
-                            sensorParser.parse(bytes)
+                            roombaSensorParser.parse(bytes)
                         }
                     }
                 }
@@ -79,24 +81,41 @@ class Repository @Inject constructor(
         }
     }
 
-
     fun getSensorValue(id: Int): Int? {
         return sensorDataSet.find { it.sensorID == id }?.signedValue
     }
 
-
     fun connectToMQTT(url: String) {
-        if (mqtt.isConnected()) mqtt.disconnectFromBroker { }
         toLogFlow("connecting to $url")
+
+        if (mqtt.isConnected()) mqtt.disconnectFromBroker { status, error ->
+            setConnectionStatus(status)
+        }
 
         mqtt.connectToBroker(url, "user${System.currentTimeMillis()}") { status, error ->
             if (status) {
-                mqtt.subscribeToTopic(MQTTtelemetryTopic)
-                mqtt.subscribeToTopic(MQTTStreamTopic)
+                mqtt.subscribeToTopic(MQTT_TELEMETRY_TOPIC)
+                mqtt.subscribeToTopic(MQTT_STREAM_TOPIC)
             }
-            _connectionStatus.value = if (status) ConnectionStatus.CONNECTED else
-                ConnectionStatus.DISCONNECTED
+            setConnectionStatus(status)
         }
+    }
+
+    fun disconnect() {
+        mqtt.disconnectFromBroker { connected, exception ->
+            setConnectionStatus(connected)
+        }
+    }
+
+    fun isConnected(): Boolean {
+        val connected = mqtt.isConnected()
+        setConnectionStatus(connected)
+        return connected
+    }
+
+    private fun setConnectionStatus(connected: Boolean) {
+        _connectionStatus.value = if (connected) ConnectionStatus.CONNECTED else
+            ConnectionStatus.DISCONNECTED
     }
 
     fun publishMessage(message: String, topic: String) {
@@ -108,6 +127,7 @@ class Repository @Inject constructor(
     }
 
     override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
+        Log.d("aaa", "onSensors: ")
         if (checksumOK) processParsedSensors(sensors)
         else
             Log.e("aaa", "CHECKSUM ERROR")
@@ -120,7 +140,8 @@ class Repository @Inject constructor(
 
             sensorDataSet.clear()
             sensorDataSet.addAll(sensors)
-            sensorsFlow.value = sensorDataSet
+            _sensorsFlow.value = sensorDataSet.clone() as List<RoombaParsedSensor>
+            Log.i("aaa", "processParsedSensors: ")
         }
     }
 
@@ -128,59 +149,14 @@ class Repository @Inject constructor(
         _logFlow.value = (string)
     }
 
-
-    private fun parseSmallRobotTelemetry(message: String) {
-        if (message.take(2) == "TS") {
-            val data = message.split(";")
-            val time = data[1].toInt()
-            val rssi = data[2].toInt()
-            val vbat = data[3].toFloat()
-            val current = data[4].toFloat()
-            val used_mAh = data[5].toFloat()
-
-            val batPercent: Int = map(vbat, 3.3f, 4.2f, 0.0f, 100.0f).toInt()
-            sensorDataSet.clear()
-            sensorDataSet.add(
-                RoombaParsedSensor(
-                    26,
-                    0u,
-                    0u,
-                    100,
-                    "Max battery percentage",
-                    ""
-                )
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(
-                    25,
-                    0u,
-                    0u,
-                    batPercent, "Battery Percentage", "%"
-                )
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(22, 0u, 0u, (vbat * 1000).toInt())
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(23, 0u, 0u, current.toInt())
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(100, 0u, 0u, time)
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(101, 0u, 0u, rssi)
-            )
-
-            sensorDataSet.add(
-                RoombaParsedSensor(102, 0u, 0u, used_mAh.toInt())
-            )
-            sensorsFlow.value = sensorDataSet
-        }
+    companion object {
+        private const val MAIN_TOPIC = "tank"
+        const val MQTT_CONTROL_TOPIC = "$MAIN_TOPIC/in"
+        const val MQTT_TELEMETRY_TOPIC = "$MAIN_TOPIC/out"
+        const val MQTT_STREAM_TOPIC = "$MAIN_TOPIC/stream"
     }
-    companion object{
-        val robotName = "tank"
-        val MQTTcontrolTopic = "$robotName/in"
-        val MQTTtelemetryTopic = "$robotName/out"
-        val MQTTStreamTopic = "$robotName/stream"
+
+    enum class ConnectionStatus {
+        DISCONNECTED, CONNECTED
     }
 }

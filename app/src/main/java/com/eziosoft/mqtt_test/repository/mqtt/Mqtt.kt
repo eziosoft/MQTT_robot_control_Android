@@ -157,11 +157,12 @@ class Mqtt @Inject constructor() {
                 status(true, null)
             }
         }
+
     }
 
-    fun disconnectFromBroker(status: (exception: Throwable?) -> Unit) {
-        client.disconnect().whenComplete { _, throwable ->
-            status(throwable)
+    fun disconnectFromBroker(status: (connected: Boolean, exception: Throwable?) -> Unit) {
+        client.disconnect().whenComplete { state, throwable ->
+            status(client.state.isConnected, throwable)
         }
     }
 
