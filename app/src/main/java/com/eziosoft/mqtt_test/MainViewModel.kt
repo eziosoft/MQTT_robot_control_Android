@@ -20,194 +20,92 @@
 
 package com.eziosoft.mqtt_test
 
-import android.content.Context
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.eziosoft.mqtt_test.repository.mqtt.Mqtt
-import com.eziosoft.mqtt_test.repository.roomba.RoombaParsedSensor
-import com.eziosoft.mqtt_test.repository.roomba.SensorParser
-import com.eziosoft.mqtt_test.helpers.map
+import androidx.viewbinding.BuildConfig
+import com.eziosoft.mqtt_test.repository.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
-import org.eclipse.paho.client.mqttv3.MqttMessage
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
+import kotlin.math.cos
+import kotlin.math.sin
 
 @ExperimentalUnsignedTypes
 @HiltViewModel
-class MainViewModel @Inject constructor(val mqtt: Mqtt) :
+class MainViewModel @Inject constructor(val repository: Repository) :
     ViewModel() {
 
+    var timer: Long = 0
+    var serverAddress = MutableStateFlow("")
 
-    val sensorParser = SensorParser(object : SensorParser.SensorListener {
-        override fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean) {
-            if (checksumOK) processParsedSensors(sensors)
-            else
-                Log.e("aaa", "CHECKSUM ERROR")
-        }
-    })
+    val connectionStatus = repository.connectionStatus
+    val logFlow = repository.logFlow
+    val sensorFlow = repository.sensorFlow
 
-    val sensorDataSet = arrayListOf<RoombaParsedSensor>()
-    val dataSetChanged: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
+    fun connectMqtt(url: String) = repository.connectToMQTT(url)
+    fun getSensorValue(id: Int) = repository.getSensorValue(id)
+    fun publishMessage(message: String, topic: String) = repository.publishMessage(message, topic)
+    private fun publishMessage(bytes: ByteArray, topic: String) =
+        repository.publishMessage(bytes, topic)
 
-    val tvString: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
+    private fun isMqttConnected() = repository.isConnected()
 
-    val serverAddress: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
+    @Suppress("ComplexMethod", "ComplexCondition")
+    fun sendJoystickData(angle: Int, strength: Int, precision: Boolean, watch: Boolean) {
+        Log.d("aaa", "handleJoystick: angle=$angle  strength=$strength")
 
-    val joyX: MutableLiveData<Float> by lazy { MutableLiveData<Float>() }
-    val joyY: MutableLiveData<Float> by lazy { MutableLiveData<Float>() }
+        var x = cos(Math.toRadians(angle.toDouble())) * strength / 100f
+        var y = sin(Math.toRadians(angle.toDouble())) * strength / 100f
 
-    var t: Long = 0
-
-    val connectionStatus: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
-
-
-    fun connectToMQTT(context: Context) {
-//        mainViewModel.serverAddress.value = "mqtt.flespi.io:1883" //T
-        val userName = "27aQSfkPYPrH1WHfjsDejLIqJxTza4i21gIHlTn8wEDlqarztSBAr7O0swnsqvi"
-        val url = "tcp://" + serverAddress.value
-
-        if (mqtt.isConnected()) mqtt.close()
-        tvString.value = "connecting to ${serverAddress.value}"
-
-        mqtt.connect(
-            context,
-            url,
-            "user${System.currentTimeMillis()}",
-            userName
-        )
-    }
-
-
-    @ExperimentalUnsignedTypes
-    private val mqttListener = object : Mqtt.MqttListener {
-        override fun onConnectComplete(reconnect: Boolean, serverURI: String?) {
-            Log.d("aaa", "connectComplete")
-            tvString.value = "Connected"
-            mqtt.subscribe(Mqtt.MQTTtelemetryTopic)
-            mqtt.subscribe(Mqtt.MQTTStreamTopic)
-            connectionStatus.value = true
+        if (precision) {
+            x /= 4f
+            y /= 4f
         }
 
-        override fun onMessageArrived(topic: String?, message: MqttMessage?) {
-            when (topic) {
-                Mqtt.MQTTtelemetryTopic -> {
-                    tvString.value =
-                        message.toString()
-                    parseSmallRobotTelemetry(message.toString())
-                }
-                Mqtt.MQTTcontrolTopic -> {
-                    Log.d("aaa", "messageArrived: $topic :" + message.toString())
-                    val b = message.toString().toByteArray()
-                    if (b[0] == '$'.toByte() && b[1] == 5.toByte()) {
-                        val x: Float = -(b[2] - 100) / 100f
-                        val y: Float = -(b[3] - 100) / 100f
+        val ch1 = (-x * 100).toInt()
+        val ch2 = (y * 100).toInt()
+        val ch3 = 0
+        val ch4 = 0
 
+        if (BuildConfig.DEBUG) {
+            Log.d("bbb", "$ch1 $ch2 $ch3 $ch4")
+        }
 
-                        joyX.value = x
-                        joyY.value = y
-
-                    }
-                }
-
-                Mqtt.MQTTStreamTopic -> {
-                    val bytes = message!!.payload!!.toUByteArray()
-                    if (!bytes.isEmpty()) {
-                        viewModelScope.launch(Dispatchers.IO) {
-                            sensorParser.parse(bytes)
-                        }
-                    }
-                }
+        if (ch1 == 0 && ch2 == 0 || ch3 == 0 && ch4 == 0 || System.currentTimeMillis() > timer) {
+            timer = System.currentTimeMillis() + JOYSTICK_SEND_COMMAND_PERIOD
+            if (!watch && isMqttConnected()) {
+                sendChannels(ch1, ch2, ch3, ch4)
             }
         }
-
-        override fun onConnectionLost(cause: Throwable?) {
-            Log.d("aaa", "connectionLost")
-            tvString.value = "Connection lost"
-            connectionStatus.value = false
-        }
-
-        override fun onDeliveryComplete(token: IMqttDeliveryToken?) {
-        }
-
     }
 
-    var timer = 0L
-    fun processParsedSensors(sensors: List<RoombaParsedSensor>) {
-        if (timer < System.currentTimeMillis()) {
-            timer = System.currentTimeMillis() + 250
-
-            sensorDataSet.clear()
-            sensorDataSet.addAll(sensors)
-
-            dataSetChanged.value = 0
-        }
-        timer++
+    override fun onCleared() {
+        repository.disconnect()
+        super.onCleared()
     }
 
-    fun getSensorValue(id: Int): Int? {
-        return sensorDataSet.find { it.sensorID == id }?.signedValue
-    }
-
-    fun parseSmallRobotTelemetry(message: String) {
-        if (message.take(2) == "TS") {
-            val data = message.split(";")
-            val time = data[1].toInt()
-            val rssi = data[2].toInt()
-            val vbat = data[3].toFloat()
-            val current = data[4].toFloat()
-            val used_mAh = data[5].toFloat()
-
-            val batPercent: Int = map(vbat, 3.3f, 4.2f, 0.0f, 100.0f).toInt()
-            sensorDataSet.clear()
-            sensorDataSet.add(
-                RoombaParsedSensor(
-                    26,
-                    0u,
-                    0u,
-                    100,
-                    "Max battery percentage",
-                    ""
-                )
+    private fun sendChannels(ch1: Int, ch2: Int, ch3: Int, ch4: Int) {
+        val bytes =
+            byteArrayOf(
+                '$'.toByte(), 5,
+                (ch1 + 100).toByte(),
+                (ch2 + 100).toByte(),
+                (ch3 + 100).toByte(),
+                (ch4 + 100).toByte()
             )
-            sensorDataSet.add(
-                RoombaParsedSensor(
-                    25,
-                    0u,
-                    0u,
-                    batPercent, "Battery Percentage", "%"
-                )
+        if (isMqttConnected()) {
+            publishMessage(
+                bytes,
+                Repository.MQTT_CONTROL_TOPIC
             )
-            sensorDataSet.add(
-                RoombaParsedSensor(22, 0u, 0u, (vbat * 1000).toInt())
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(23, 0u, 0u, current.toInt())
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(100, 0u, 0u, time)
-            )
-            sensorDataSet.add(
-                RoombaParsedSensor(101, 0u, 0u, rssi)
-            )
-
-            sensorDataSet.add(
-                RoombaParsedSensor(102, 0u, 0u, used_mAh.toInt())
-            )
-            dataSetChanged.value = 0
-
         }
     }
 
-    init {
-        mqtt.setListener(mqttListener)
+    fun sendCommandsChannels(ch3: Int, ch4: Int) {
+        sendChannels(0, 0, ch3, ch4)
+    }
 
+    companion object {
+        const val JOYSTICK_SEND_COMMAND_PERIOD = 100 // in ms
     }
 }

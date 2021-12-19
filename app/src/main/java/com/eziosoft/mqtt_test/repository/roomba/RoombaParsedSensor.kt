@@ -29,8 +29,12 @@ data class RoombaParsedSensor @ExperimentalUnsignedTypes constructor(
     val units: String? = RoombaAvailableSensors.getSensor(sensorID.toInt())?.unit
 ) {
     val signedValue: Int
-        get() = if (RoombaAvailableSensors.getSensor(sensorID)!!.min < 0) unsignedValue.toShort()
-            .toInt() else unsignedValue
+        get() = if (RoombaAvailableSensors.getSensor(sensorID)!!.min < 0) {
+            unsignedValue.toShort()
+                .toInt()
+        } else {
+            unsignedValue
+        }
 
     fun toString1(): String = "$name=$signedValue$units"
 

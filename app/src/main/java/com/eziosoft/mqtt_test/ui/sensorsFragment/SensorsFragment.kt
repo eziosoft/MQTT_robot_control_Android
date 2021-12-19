@@ -21,12 +21,14 @@
 package com.eziosoft.mqtt_test.ui.sensorsFragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.eziosoft.mqtt_test.MainViewModel
 import com.eziosoft.mqtt_test.R
 import com.eziosoft.mqtt_test.databinding.SensorsFragmentBinding
+import com.eziosoft.mqtt_test.helpers.collectLatestLifecycleFLow
 import dagger.hilt.android.AndroidEntryPoint
 
 @ExperimentalUnsignedTypes
@@ -48,13 +50,14 @@ class SensorsFragment : Fragment(R.layout.sensors_fragment) {
             recyclerView.adapter = adapter
         }
 
-        viewModel.dataSetChanged.observe(viewLifecycleOwner)
-        {
-            adapter.submitList(viewModel.sensorDataSet)
+
+
+        collectLatestLifecycleFLow(viewModel.sensorFlow) { listOfSensors ->
+            Log.d("aaa", "sensor fragment: ")
+            adapter.submitList(listOfSensors)
             adapter.notifyDataSetChanged()
         }
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

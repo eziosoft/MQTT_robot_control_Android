@@ -21,30 +21,34 @@
 package com.eziosoft.mqtt_test.repository.roomba
 
 import kotlinx.coroutines.*
+import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.system.measureTimeMillis
 
 
 @ExperimentalUnsignedTypes
 @Singleton
-class SensorParser(private val sensorListener: SensorListener) {
+class RoombaSensorParser @Inject constructor() {
     var logging = false
-    var state = STATE.HEADER
-    var n: UByte = 0u
-    var ni = 0
-    var chksum: UByte = 0u
-    var b1: UByte = 0u
-    var b2: UByte = 0u
-    var value = 0
-    var packetID: Int = 0
+    private var state = STATE.HEADER
+    private var n: UByte = 0u
+    private var ni = 0
+    private var chksum: UByte = 0u
+    private var b1: UByte = 0u
+    private var b2: UByte = 0u
+    private var value = 0
+    private var packetID: Int = 0
 
-    var isParsing = false
+    private var isParsing = false
     private val sensors = arrayListOf<RoombaParsedSensor>()
 
-    interface SensorListener {
-        fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean)
+    private var sensorListener: SensorListener? = null
+
+    fun setListener(sensorListener: SensorListener) {
+        this.sensorListener = sensorListener
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     suspend fun parse(bytes: UByteArray) {
         val elapsed = measureTimeMillis {
             isParsing = true
@@ -118,12 +122,12 @@ class SensorParser(private val sensorListener: SensorListener) {
                                     println(sensors.toString())
                                 }
                                 withContext(Dispatchers.Main) {
-                                    sensorListener.onSensors(sensors.toList(), true)
+                                    sensorListener?.onSensors(sensors.toList(), true)
                                 }
                             } else {
                                 if (logging) println("chksum FAILED")
                                 withContext(Dispatchers.Main) {
-                                    sensorListener.onSensors(sensors.toList(), false)
+                                    sensorListener?.onSensors(sensors.toList(), false)
                                 }
                                 state = STATE.HEADER
                             }
@@ -149,6 +153,10 @@ class SensorParser(private val sensorListener: SensorListener) {
             isParsing = false
         }
         if (logging) println("---------------------------------->$elapsed")
+    }
+
+    interface SensorListener {
+        fun onSensors(sensors: List<RoombaParsedSensor>, checksumOK: Boolean)
     }
 
     companion object {

@@ -23,6 +23,7 @@ package com.eziosoft.mqtt_test.repository.roomba
 object RoombaAvailableSensors {
     private var sensors = hashMapOf<Int, RoombaSensor>()
 
+    @Suppress("LongParameterList")
     private fun add(
         packetID: Int,
         name: String,
