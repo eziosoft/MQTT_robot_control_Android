@@ -81,11 +81,9 @@ class Repository @Inject constructor(
         }
     }
 
-//    fun getSensorValue(id: Int): Int? {
-//        return sensorDataSet.find { it.sensorID == id }?.signedValue
-//    }
-
-
+    private fun getSensorValue(id: Int): Int? {
+        return sensorDataSet.find { it.sensorID == id }?.signedValue
+    }
 
     fun connectToMQTT(url: String) {
         toLogFlow("connecting to $url")
